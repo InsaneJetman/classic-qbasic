@@ -1,138 +1,172 @@
+'
+'                    Q B a s i c   M O N E Y   M A N A G E R
+'
+'                   Copyright (C) Microsoft Corporation 1990
+'
+'   The Money Manager is a personal finance manager that allows you
+'   to enter account transactions while tracking your account balances
+'   and net worth.
+'
+
+'For faster operation
 DEFINT A-Z
-DECLARE SUB TransactionSummary (item%)
-DECLARE SUB lcenter (text$)
-DECLARE SUB pause ()
+
+'Sub and function declarations
+DECLARE SUB TransactionSummary (Item%)
+DECLARE SUB Lcenter (Text$)
 DECLARE SUB ScrollUp ()
 DECLARE SUB ScrollDown ()
 DECLARE SUB Initialize ()
-DECLARE SUB Dointro ()
+DECLARE SUB DoIntro ()
 DECLARE SUB Sparkle ()
-DECLARE SUB center (row%, text$)
-DECLARE SUB fancyCls (dots%, background%)
+DECLARE SUB Center (Row%, Text$)
+DECLARE SUB FancyCls (Dots%, Background%)
 DECLARE SUB LoadState ()
 DECLARE SUB SaveState ()
 DECLARE SUB MenuSystem ()
 DECLARE SUB MakeBackup ()
 DECLARE SUB RestoreBackup ()
-DECLARE SUB box (row1%, col1%, row2%, col2%)
+DECLARE SUB Box (Row1%, Col1%, Row2%, Col2%)
 DECLARE SUB NetWorthReport ()
 DECLARE SUB EditAccounts ()
-DECLARE SUB printHelpLine (help$)
-DECLARE SUB EditTrans (item%)
-DECLARE FUNCTION Cvdt$ (x#)
-DECLARE FUNCTION Cvst$ (x!)
-DECLARE FUNCTION Cvit$ (x%)
-DECLARE FUNCTION Menu% (currChoiceX%, maxChoice%, choice$(), itemRow%(), itemCol%(), help$(), barMode%)
-DECLARE FUNCTION GetString$ (row%, col%, start$, end$, vis%, max%)
-DECLARE FUNCTION Trim$ (x$)
+DECLARE SUB PrintHelpLine (Help$)
+DECLARE SUB EditTrans (Item%)
+DECLARE FUNCTION Cvdt$ (X#)
+DECLARE FUNCTION Cvst$ (X!)
+DECLARE FUNCTION Cvit$ (X%)
+DECLARE FUNCTION Menu% (CurrChoiceX%, MaxChoice%, Choice$(), ItemRow%(), ItemCol%(), Help$(), BarMode%)
+DECLARE FUNCTION GetString$ (Row%, Col%, Start$, End$, Vis%, Max%)
+DECLARE FUNCTION Trim$ (X$)
 
+'Constants
 CONST TRUE = -1
 CONST FALSE = NOT TRUE
-WIDTH , 25
 
-TYPE accountType
-    title        AS STRING * 20
-    aType        AS STRING * 1
-    desc         AS STRING * 50
+TYPE AccountType
+    Title        AS STRING * 20
+    AType        AS STRING * 1
+    Desc         AS STRING * 50
 END TYPE
 
-TYPE recordtype
-    date     AS STRING * 8
-    ref      AS STRING * 10
-    desc     AS STRING * 50
-    fig1     AS DOUBLE
-    fig2     AS DOUBLE
+TYPE Recordtype
+    Date     AS STRING * 8
+    Ref      AS STRING * 10
+    Desc     AS STRING * 50
+    Fig1     AS DOUBLE
+    Fig2     AS DOUBLE
 END TYPE
 
-DIM SHARED account(1 TO 18)  AS accountType
-DIM SHARED monitorType
-DIM SHARED colors(0 TO 20, 1 TO 4)
-DIM SHARED ScrollUpAsm(1 TO 7)
+DIM SHARED account(1 TO 18)  AS AccountType     'Stores the 18 account titles
+DIM SHARED ColorPref                            'Color Preference
+DIM SHARED Colors(0 TO 20, 1 TO 4)              'Different Colors
+DIM SHARED ScrollUpAsm(1 TO 7)                  'Assembly Language Routines
 DIM SHARED ScrollDownAsm(1 TO 7)
+DIM SHARED maxrow AS INTEGER
 
+    'Open data file.  If not there, goto error handler to initialize it
     ON ERROR GOTO FileNotFound
     OPEN "money.dat" FOR INPUT AS #1
     CLOSE
     ON ERROR GOTO 0
 
-    Initialize
-    Dointro
-    MenuSystem
+    Initialize      'Initialize global variables
+    DoIntro         'Do fancy intro
+    MenuSystem      'This is the main program
+    COLOR 15, 0     'Clear screen and end
+    CLS
     END
 
-FileNotFound:
+FileNotFound:       'if the file is not found, then set initial state & save
     SELECT CASE ERR
         CASE 53
             CLOSE
-            monitorType = 1
+            ColorPref = 1
+            FOR A = 1 TO 18
+                account(A).Title = ""
+                account(A).AType = ""
+                account(A).Desc = ""
+            NEXT A
             SaveState
         CASE ELSE
     END SELECT
     RESUME
 
+    'Following is data for the different colors.
+
     'scrn  dots  bar  back   title  shdow  choice  curs   cursbk  shdow
-DATA 3,    7,    15,  7,     0,     7,     0,      15,    0,      0
+DATA 0,    7,    15,  7,     0,     7,     0,      15,    0,      0
 DATA 1,    9,    12,  3,     0,     1,     15,     0,     7,      0
 DATA 3,    15,   13,  1,     14,    3,     15,     0,     7,      0
 DATA 7,    12,   15,  4,     14,    0,     15,     15,    1,      0
 
+    'Following is data which is actually a machine language program to
+    'scroll the screen up or down very fast using a BIOS call.
+
 DATA &HB8,&H01,&H06,&HB9,&H01,&H04,&HBA,&H4E,&H16,&HB7,&H00,&HCD,&H10,&HCB
 DATA &HB8,&H01,&H07,&HB9,&H01,&H04,&HBA,&H4E,&H16,&HB7,&H00,&HCD,&H10,&HCB
 
-SUB box (row1, col1, row2, col2) STATIC
+'Draws a character based box on the screen between the given coordinates
+SUB Box (Row1, Col1, Row2, Col2) STATIC
 
-    boxWidth = col2 - col1 + 1
+    BoxWidth = Col2 - Col1 + 1
 
-    LOCATE row1, col1
-    PRINT "⁄"; STRING$(boxWidth - 2, "ƒ"); "ø";
+    LOCATE Row1, Col1
+    PRINT "⁄"; STRING$(BoxWidth - 2, "ƒ"); "ø";
 
-    FOR a = row1 + 1 TO row2 - 1
-        LOCATE a, col1
-        PRINT "≥"; SPACE$(boxWidth - 2); "≥";
-    NEXT a
+    FOR A = Row1 + 1 TO Row2 - 1
+        LOCATE A, Col1
+        PRINT "≥"; SPACE$(BoxWidth - 2); "≥";
+    NEXT A
 
-    LOCATE row2, col1
-    PRINT "¿"; STRING$(boxWidth - 2, "ƒ"); "Ÿ";
-
-END SUB
-
-SUB center (row, text$)
-
-    LOCATE row, 41 - LEN(text$) / 2
-    PRINT text$;
+    LOCATE Row2, Col1
+    PRINT "¿"; STRING$(BoxWidth - 2, "ƒ"); "Ÿ";
 
 END SUB
 
-FUNCTION Cvdt$ (x#)
+'Centers Text$ on the given ROW
+SUB Center (Row, Text$)
 
-    Cvdt$ = RIGHT$(STR$(x#), LEN(STR$(x#)) - 1)
+    LOCATE Row, 41 - LEN(Text$) / 2
+    PRINT Text$;
+
+END SUB
+
+'Function to convert a double precision number to a string WITHOUT a
+'leading space
+FUNCTION Cvdt$ (X#)
+
+    Cvdt$ = RIGHT$(STR$(X#), LEN(STR$(X#)) - 1)
 
 END FUNCTION
 
-FUNCTION Cvit$ (x)
-    Cvit$ = RIGHT$(STR$(x), LEN(STR$(x)) - 1)
+'Function to convert an integer to a string WITHOUT a leading space
+FUNCTION Cvit$ (X)
+    Cvit$ = RIGHT$(STR$(X), LEN(STR$(X)) - 1)
 END FUNCTION
 
-FUNCTION Cvst$ (x!)
-    Cvst$ = RIGHT$(STR$(x!), LEN(STR$(x!)) - 1)
+'Function to convert a single precision number to a string WITHOUT a
+'leading space
+FUNCTION Cvst$ (X!)
+    Cvst$ = RIGHT$(STR$(X!), LEN(STR$(X!)) - 1)
 END FUNCTION
 
-SUB Dointro
+'Draw nice title screen, and call SparklePause
+SUB DoIntro
 
     COLOR 15, 1
     CLS
-    center 4, "The"
+    Center 4, "The"
     COLOR 14
-    DIM a$(10)
-    center 5, "‹     ‹ ‹‹‹‹ ‹   ‹ ‹‹‹‹ ‹   ‹      ‹     ‹ ‹‹‹‹ ‹   ‹ ‹‹‹‹ ‹‹‹‹‹ ‹‹‹‹ ‹‹‹‹‹"
-    center 6, "€ﬂ‹ ‹ﬂ€ €  € €‹  € €    €‹‹‹€      €ﬂ‹ ‹ﬂ€ €  € €‹  € €  € €     €    €   €"
-    center 7, "€  ﬂ  € €  € € ﬂ‹€ €ﬂﬂﬂ   €        €  ﬂ  € €ﬂﬂ€ € ﬂ‹€ €ﬂﬂ€ € ﬂﬂ€ €ﬂﬂﬂ €ﬂ€ﬂﬂ"
-    center 8, "€     € €‹‹€ €   € €‹‹‹   €        €     € €  € €   € €  € €‹‹‹€ €‹‹‹ €  ﬂ‹"
+    DIM A$(10)
+    Center 5, "‹     ‹ ‹‹‹‹ ‹   ‹ ‹‹‹‹ ‹   ‹      ‹     ‹ ‹‹‹‹ ‹   ‹ ‹‹‹‹ ‹‹‹‹‹ ‹‹‹‹ ‹‹‹‹‹"
+    Center 6, "€ﬂ‹ ‹ﬂ€ €  € €‹  € €    €‹‹‹€      €ﬂ‹ ‹ﬂ€ €  € €‹  € €  € €     €    €   €"
+    Center 7, "€  ﬂ  € €  € € ﬂ‹€ €ﬂﬂﬂ   €        €  ﬂ  € €ﬂﬂ€ € ﬂ‹€ €ﬂﬂ€ € ﬂﬂ€ €ﬂﬂﬂ €ﬂ€ﬂﬂ"
+    Center 8, "€     € €‹‹€ €   € €‹‹‹   €        €     € €  € €   € €  € €‹‹‹€ €‹‹‹ €  ﬂ‹"
 
     COLOR 15
-    center 11, "A Personal Finance Manager written in"
-    center 12, "MS-DOS QBasic"
-    center 24, "Push Any Key To Continue"
+    Center 11, "A Personal Finance Manager written in"
+    Center 12, "MS-DOS QBasic"
+    Center maxrow - 1, "Push any key to continue"
 
     COLOR 13
     Sparkle
@@ -140,217 +174,224 @@ SUB Dointro
 
 END SUB
 
+'This is the full-screen editor which allows you to change your account
+'titles and descriptions
 SUB EditAccounts
 
-    REDIM help$(4), col(4), vis(4), max(4), edit$(18, 3)
+    'Information about each column
+    REDIM Help$(4), Col(4), Vis(4), Max(4), Edit$(18, 3)
 
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    box 2, 1, 24, 80
+    'Draw the screen
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    Box 2, 1, maxrow - 1, 80
 
-    COLOR colors(5, monitorType), colors(4, monitorType)
+    COLOR Colors(5, ColorPref), Colors(4, ColorPref)
     LOCATE 1, 68
-
     PRINT "Edit Accounts";
-    COLOR colors(7, monitorType), colors(4, monitorType)
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
 
     LOCATE 3, 2: PRINT "  ≥                    ≥                                                  ≥Ass"
     LOCATE 4, 2: PRINT "No≥ Account Title      ≥ Description                                      ≥Lia"
     LOCATE 5, 2: PRINT "ƒƒ≈ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ≈ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ≈ƒƒƒ"
                   u$ = "##≥\                  \≥\                                                \≥ ! "
-    FOR a = 6 TO 23
-        LOCATE a, 2
-        x = a - 5
-        PRINT USING u$; x; account(x).title; account(x).desc; account(x).aType;
-    NEXT a
+    FOR A = 6 TO 23
+        LOCATE A, 2
+        X = A - 5
+        PRINT USING u$; X; account(X).Title; account(X).Desc; account(X).AType;
+    NEXT A
 
-    help$(1) = "Hit <F2> save changes, or <Escape> to abort"
-    help$(2) = "Hit <F2> save changes, or <Escape> to abort"
-    help$(3) = "In this column, enter [A] for asset, or [L] for liability"
-    
+    'Initialize variables
+    Help$(1) = "Hit <F2> save changes, or <Escape> to abort"
+    Help$(2) = "Hit <F2> save changes, or <Escape> to abort"
+    Help$(3) = "In this column, enter [A] for asset, or [L] for liability"
 
-    col(1) = 5: col(2) = 26: col(3) = 78
-    vis(1) = 20: vis(2) = 50: vis(3) = 1
-    max(1) = 20: max(2) = 50: max(3) = 1
+    Col(1) = 5: Col(2) = 26: Col(3) = 78
+    Vis(1) = 20: Vis(2) = 50: Vis(3) = 1
+    Max(1) = 20: Max(2) = 50: Max(3) = 1
 
-    FOR a = 1 TO 18
-        edit$(a, 1) = account(a).title
-        edit$(a, 2) = account(a).desc
-        edit$(a, 3) = account(a).aType
-    NEXT a
+    FOR A = 1 TO 18
+        Edit$(A, 1) = account(A).Title
+        Edit$(A, 2) = account(A).Desc
+        Edit$(A, 3) = account(A).AType
+    NEXT A
 
-    finished = FALSE
+    Finished = FALSE
 
-    currRow = 1
-    currCol = 1
+    CurrRow = 1
+    CurrCol = 1
 
+    'Loop until F2 or <ESC> is pressed
     DO
-        GOSUB EditAccountsShowCursor
-        DO: kbd$ = INKEY$: LOOP UNTIL kbd$ <> ""
-        IF kbd$ >= " " AND kbd$ < "~" THEN
+        GOSUB EditAccountsShowCursor            'Show Cursor
+        DO                                      'Wait for key
+            Kbd$ = INKEY$
+        LOOP UNTIL Kbd$ <> ""
+
+        IF Kbd$ >= " " AND Kbd$ < "~" THEN      'If legal, edit item
             GOSUB EditAccountsEditItem
         END IF
-        GOSUB EditAccountsHideCursor
-
-
-        SELECT CASE kbd$
-            CASE CHR$(0) + "H"
-                currRow = (currRow + 16) MOD 18 + 1
-            CASE CHR$(0) + "P"
-                currRow = (currRow) MOD 18 + 1
-            CASE CHR$(0) + "K", CHR$(0) + CHR$(15)
-                currCol = (currCol + 1) MOD 3 + 1
-            CASE CHR$(0) + "M", CHR$(9)
-                currCol = (currCol) MOD 3 + 1
-            CASE CHR$(0) + "G"
-                currCol = 1
-            CASE CHR$(0) + "O"
-                currCol = 4
-            CASE CHR$(0) + "I"
-                currRow = 1
-            CASE CHR$(0) + "Q"
-                currRow = 18
-            CASE CHR$(0) + "<"
-                finished = TRUE
-                save = TRUE
-            CASE CHR$(27)
-                finished = TRUE
-                save = FALSE
-            CASE CHR$(13)
+        GOSUB EditAccountsHideCursor            'Hide Cursor so it can move
+                                                'If it needs to
+        SELECT CASE Kbd$
+            CASE CHR$(0) + "H"                              'Up Arrow
+                CurrRow = (CurrRow + 16) MOD 18 + 1
+            CASE CHR$(0) + "P"                              'Down Arrow
+                CurrRow = (CurrRow) MOD 18 + 1
+            CASE CHR$(0) + "K", CHR$(0) + CHR$(15)          'Left or Shift+Tab
+                CurrCol = (CurrCol + 1) MOD 3 + 1
+            CASE CHR$(0) + "M", CHR$(9)                     'Right or Tab
+                CurrCol = (CurrCol) MOD 3 + 1
+            CASE CHR$(0) + "<"                              'F2
+                Finished = TRUE
+                Save = TRUE
+            CASE CHR$(27)                                   'Esc
+                Finished = TRUE
+                Save = FALSE
+            CASE CHR$(13)                                   'Return
             CASE ELSE
                 BEEP
         END SELECT
-    LOOP UNTIL finished
+    LOOP UNTIL Finished
 
-    IF save THEN
+    IF Save THEN
         GOSUB EditAccountsSaveData
     END IF
 
     EXIT SUB
 
 EditAccountsShowCursor:
-    COLOR colors(8, monitorType), colors(9, monitorType)
-    LOCATE currRow + 5, col(currCol)
-    PRINT LEFT$(edit$(currRow, currCol), vis(currCol));
-    printHelpLine help$(currCol)
+    COLOR Colors(8, ColorPref), Colors(9, ColorPref)
+    LOCATE CurrRow + 5, Col(CurrCol)
+    PRINT LEFT$(Edit$(CurrRow, CurrCol), Vis(CurrCol));
+    PrintHelpLine Help$(CurrCol)
     RETURN
 
 EditAccountsEditItem:
-    COLOR colors(8, monitorType), colors(9, monitorType)
+    COLOR Colors(8, ColorPref), Colors(9, ColorPref)
     ok = FALSE
     DO
-        kbd$ = GetString$(currRow + 5, col(currCol), kbd$, back$, vis(currCol), max(currCol))
-        edit$(currRow, currCol) = LEFT$(back$ + SPACE$(max(currCol)), max(currCol))
+        Kbd$ = GetString$(CurrRow + 5, Col(CurrCol), Kbd$, back$, Vis(CurrCol), Max(CurrCol))
+        Edit$(CurrRow, CurrCol) = LEFT$(back$ + SPACE$(Max(CurrCol)), Max(CurrCol))
 
-        IF currCol = 3 THEN
-            x$ = UCASE$(back$)
-            IF x$ = "A" OR x$ = "L" OR x$ = "" OR x$ = " " THEN
+        IF CurrCol = 3 THEN
+            X$ = UCASE$(back$)
+            IF X$ = "A" OR X$ = "L" OR X$ = "" OR X$ = " " THEN
                 ok = TRUE
-                edit$(currRow, currCol) = x$
+                Edit$(CurrRow, CurrCol) = X$
             ELSE
                 BEEP
             END IF
         ELSE
             ok = TRUE
         END IF
-        
+
     LOOP UNTIL ok
     RETURN
 
 EditAccountsHideCursor:
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    LOCATE currRow + 5, col(currCol)
-    PRINT SPACE$(vis(currCol));
-    LOCATE currRow + 5, col(currCol)
-    PRINT LEFT$(edit$(currRow, currCol), vis(currCol));
-    printHelpLine help$(currCol)
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    LOCATE CurrRow + 5, Col(CurrCol)
+    PRINT SPACE$(Vis(CurrCol));
+    LOCATE CurrRow + 5, Col(CurrCol)
+    PRINT LEFT$(Edit$(CurrRow, CurrCol), Vis(CurrCol));
+    PrintHelpLine Help$(CurrCol)
     RETURN
 
 
 EditAccountsSaveData:
-    FOR a = 1 TO 18
-        account(a).title = edit$(a, 1)
-        account(a).desc = edit$(a, 2)
-        account(a).aType = edit$(a, 3)
-    NEXT a
+    FOR A = 1 TO 18
+        account(A).Title = Edit$(A, 1)
+        account(A).Desc = Edit$(A, 2)
+        account(A).AType = Edit$(A, 3)
+    NEXT A
     SaveState
     RETURN
 
 END SUB
 
-SUB EditTrans (item)
+'This is the full-screen editor which allows you to enter and change
+'transactions
+SUB EditTrans (Item)
 
-    REDIM help$(6), col(6), vis(6), max(6), currString$(3), currFig#(5)
-    REDIM balance#(1000)
+    'Stores info about each column
+    REDIM Help$(6), Col(6), Vis(6), Max(6), CurrString$(3), CurrFig#(5)
+    'Array to keep the current balance at all the transactions
+    REDIM Balance#(1000)
 
-    file$ = "money." + Cvit$(item)
-    OPEN file$ FOR RANDOM AS #1 LEN = 84
-    FIELD #1, 8 AS ioDate$, 10 AS ioRef$, 50 AS ioDesc$, 8 AS ioFig1$, 8 AS ioFig2$
-    FIELD #1, 11 AS valid$, 5 AS ioMaxRecord$, 8 AS ioBalance$
+    'Open random access file
+    File$ = "money." + Cvit$(Item)
+    OPEN File$ FOR RANDOM AS #1 LEN = 84
+    FIELD #1, 8 AS IoDate$, 10 AS IoRef$, 50 AS IoDesc$, 8 AS IoFig1$, 8 AS IoFig2$
+    FIELD #1, 11 AS valid$, 5 AS IoMaxRecord$, 8 AS IoBalance$
 
-    currString$(1) = ""
-    currString$(2) = ""
-    currString$(3) = ""
-    currFig#(4) = 0
-    currFig#(5) = 0
+    'Initialize variables
+    CurrString$(1) = ""
+    CurrString$(2) = ""
+    CurrString$(3) = ""
+    CurrFig#(4) = 0
+    CurrFig#(5) = 0
 
     GET #1, 1
     IF valid$ <> "THISISVALID" THEN
-        LSET ioDate$ = ""
-        LSET ioRef$ = ""
-        LSET ioDesc$ = ""
-        LSET ioFig1$ = MKD$(0)
-        LSET ioFig2$ = MKD$(0)
+        LSET IoDate$ = ""
+        LSET IoRef$ = ""
+        LSET IoDesc$ = ""
+        LSET IoFig1$ = MKD$(0)
+        LSET IoFig2$ = MKD$(0)
         PUT #1, 2
         LSET valid$ = "THISISVALID"
-        LSET ioMaxRecord$ = "1"
-        LSET ioBalance$ = MKD$(0)
+        LSET IoMaxRecord$ = "1"
+        LSET IoBalance$ = MKD$(0)
         PUT #1, 1
     END IF
 
-    maxRecord = VAL(ioMaxRecord$)
+    MaxRecord = VAL(IoMaxRecord$)
 
-    balance#(0) = 0
-    a = 1
-    WHILE a <= maxRecord
-        GET #1, a + 1
-        balance#(a) = balance#(a - 1) + CVD(ioFig1$) - CVD(ioFig2$)
-        a = a + 1
+    Balance#(0) = 0
+    A = 1
+    WHILE A <= MaxRecord
+        GET #1, A + 1
+        Balance#(A) = Balance#(A - 1) + CVD(IoFig1$) - CVD(IoFig2$)
+        A = A + 1
     WEND
     GOSUB EditTransWriteBalance
 
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    box 2, 1, 24, 80
 
-    COLOR colors(5, monitorType), colors(4, monitorType)
-    x$ = Trim$(account(item).title)
-    LOCATE 1, 80 - LEN(x$)
-    PRINT x$;
+    Help$(1) = "<F2> Save & Exit    <F9> Insert Transaction     <F10> Delete Transaction"
+    Help$(2) = "<F2> Save & Exit    <F9> Insert Transaction     <F10> Delete Transaction"
+    Help$(3) = "<F2> Save & Exit    <F9> Insert Transaction     <F10> Delete Transaction"
+    Help$(4) = "Transactions that Increase value of asset, or increase debt owed for liability"
+    Help$(5) = "Transactions that decrease value of asset, or decrease debt owed for liability"
 
-    help$(1) = "<F2> Save & Exit    <F9> Insert Transaction     <F10> Delete Transaction"
-    help$(2) = "<F2> Save & Exit    <F9> Insert Transaction     <F10> Delete Transaction"
-    help$(3) = "<F2> Save & Exit    <F9> Insert Transaction     <F10> Delete Transaction"
-    help$(4) = "Transactions that Increase value of asset, or increase debt owed for liability"
-    help$(5) = "Transactions that decrease value of asset, or decrease debt owed for liability"
+    Col(1) = 2
+    Col(2) = 11
+    Col(3) = 19
+    Col(4) = 50
+    Col(5) = 60
 
-    col(1) = 2
-    col(2) = 11
-    col(3) = 19
-    col(4) = 50
-    col(5) = 60
+    Vis(1) = 8
+    Vis(2) = 7
+    Vis(3) = 30
+    Vis(4) = 9
+    Vis(5) = 9
 
-    vis(1) = 8
-    vis(2) = 7
-    vis(3) = 30
-    vis(4) = 9
-    vis(5) = 9
+    Max(1) = 8
+    Max(2) = 10
+    Max(3) = 50
+    Max(4) = 8
+    Max(5) = 8
 
-    max(1) = 8
-    max(2) = 10
-    max(3) = 50
-    max(4) = 8
-    max(5) = 8
 
-    COLOR colors(7, monitorType), colors(4, monitorType)
+    'Draw Screen
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    Box 2, 1, maxrow - 1, 80
+
+    COLOR Colors(5, ColorPref), Colors(4, ColorPref)
+    X$ = Trim$(account(Item).Title)
+    LOCATE 1, 80 - LEN(X$)
+    PRINT X$;
+
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
     LOCATE 3, 2: PRINT "  Date  ≥ Ref#  ≥Description                   ≥Increase ≥Decrease ≥ Balance  "
     LOCATE 4, 2: PRINT "ƒƒƒƒƒƒƒƒ≈ƒƒƒƒƒƒƒ≈ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ≈ƒƒƒƒƒƒƒƒƒ≈ƒƒƒƒƒƒƒƒƒ≈ƒƒƒƒƒƒƒƒƒƒ"
 
@@ -361,65 +402,68 @@ SUB EditTrans (item)
     u3$ = "###,###.##"
     u4$ = "         "
 
-    currTopline = 1
+    CurrTopline = 1
     GOSUB EditTransPrintWholeScreen
 
-    currRow = 1
-    currCol = 1
+    CurrRow = 1
+    CurrCol = 1
     GOSUB EditTransGetLine
 
-    finished = FALSE
+    Finished = FALSE
+
+
+    'Loop until <F2> is pressed
     DO
-        GOSUB EditTransShowCursor
-        DO: kbd$ = INKEY$: LOOP UNTIL kbd$ <> ""
+        GOSUB EditTransShowCursor                   'Show Cursor, Wait for key
+        DO: Kbd$ = INKEY$: LOOP UNTIL Kbd$ <> ""
         GOSUB EditTransHideCursor
 
-        IF kbd$ >= " " AND kbd$ < "~" THEN
+        IF Kbd$ >= " " AND Kbd$ < "~" THEN        'If legal key, edit item
             GOSUB EditTransEditItem
         END IF
 
-        SELECT CASE kbd$
-            CASE CHR$(0) + "H"  'up
+        SELECT CASE Kbd$                            'Handle Special keys
+            CASE CHR$(0) + "H"                      'up arrow
                 GOSUB EditTransMoveUp
-            CASE CHR$(0) + "P"
+            CASE CHR$(0) + "P"                      'Down arrow
                 GOSUB EditTransMoveDown
-            CASE CHR$(0) + "K", CHR$(0) + CHR$(15)
-                currCol = (currCol + 3) MOD 5 + 1
-            CASE CHR$(0) + "M", CHR$(9)
-                currCol = (currCol) MOD 5 + 1
-            CASE CHR$(0) + "G"
-                currCol = 1
-            CASE CHR$(0) + "O"
-                currCol = 5
-            CASE CHR$(0) + "I"
-                currRow = 1
-                currTopline = currTopline - 19
-                IF currTopline < 1 THEN
-                    currTopline = 1
+            CASE CHR$(0) + "K", CHR$(0) + CHR$(15)  'Left Arrow,BackTab
+                CurrCol = (CurrCol + 3) MOD 5 + 1
+            CASE CHR$(0) + "M", CHR$(9)             'Right Arrow,Tab
+                CurrCol = (CurrCol) MOD 5 + 1
+            CASE CHR$(0) + "G"                      'Home
+                CurrCol = 1
+            CASE CHR$(0) + "O"                      'End
+                CurrCol = 5
+            CASE CHR$(0) + "I"                      'Page Up
+                CurrRow = 1
+                CurrTopline = CurrTopline - 19
+                IF CurrTopline < 1 THEN
+                    CurrTopline = 1
                 END IF
                 GOSUB EditTransPrintWholeScreen
-                currRow = 1
+                CurrRow = 1
                 GOSUB EditTransGetLine
-            CASE CHR$(0) + "Q"
-                currRow = 1
-                currTopline = currTopline + 19
-                IF currTopline > maxRecord THEN
-                    currTopline = maxRecord
+            CASE CHR$(0) + "Q"                      'Page Down
+                CurrRow = 1
+                CurrTopline = CurrTopline + 19
+                IF CurrTopline > MaxRecord THEN
+                    CurrTopline = MaxRecord
                 END IF
                 GOSUB EditTransPrintWholeScreen
-                currRow = 1
+                CurrRow = 1
                 GOSUB EditTransGetLine
-            CASE CHR$(0) + "<"
-                finished = TRUE
-            CASE CHR$(0) + "C"
+            CASE CHR$(0) + "<"                      'F2
+                Finished = TRUE
+            CASE CHR$(0) + "C"                      'F9
                 GOSUB EditTransAddRecord
-            CASE CHR$(0) + "D"
+            CASE CHR$(0) + "D"                      'F10
                 GOSUB EditTransDeleteRecord
-            CASE CHR$(13)
+            CASE CHR$(13)                           'Enter
             CASE ELSE
                 'BEEP
         END SELECT
-    LOOP UNTIL finished
+    LOOP UNTIL Finished
 
     CLOSE
 
@@ -427,41 +471,41 @@ SUB EditTrans (item)
 
 
 EditTransShowCursor:
-    COLOR colors(8, monitorType), colors(9, monitorType)
-    LOCATE currRow + 4, col(currCol)
-    PRINT SPACE$(vis(currCol));
-    LOCATE currRow + 4, col(currCol)
-    SELECT CASE currCol
+    COLOR Colors(8, ColorPref), Colors(9, ColorPref)
+    LOCATE CurrRow + 4, Col(CurrCol)
+    PRINT SPACE$(Vis(CurrCol));
+    LOCATE CurrRow + 4, Col(CurrCol)
+    SELECT CASE CurrCol
         CASE 1, 2, 3
-            PRINT LEFT$(currString$(currCol), vis(currCol));
+            PRINT LEFT$(CurrString$(CurrCol), Vis(CurrCol));
         CASE 4
-            IF currFig#(4) <> 0 OR currFig#(5) = 0 THEN
-                PRINT USING u2$; currFig#(4);
+            IF CurrFig#(4) <> 0 OR CurrFig#(5) = 0 THEN
+                PRINT USING u2$; CurrFig#(4);
             END IF
         CASE 5
-            IF currFig#(5) <> 0 THEN
-                PRINT USING u2$; currFig#(5);
+            IF CurrFig#(5) <> 0 THEN
+                PRINT USING u2$; CurrFig#(5);
             END IF
     END SELECT
-    printHelpLine help$(currCol)
+    PrintHelpLine Help$(CurrCol)
     RETURN
 
 
 EditTransHideCursor:
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    LOCATE currRow + 4, col(currCol)
-    PRINT SPACE$(vis(currCol));
-    LOCATE currRow + 4, col(currCol)
-    SELECT CASE currCol
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    LOCATE CurrRow + 4, Col(CurrCol)
+    PRINT SPACE$(Vis(CurrCol));
+    LOCATE CurrRow + 4, Col(CurrCol)
+    SELECT CASE CurrCol
         CASE 1, 2, 3
-            PRINT LEFT$(currString$(currCol), vis(currCol));
+            PRINT LEFT$(CurrString$(CurrCol), Vis(CurrCol));
         CASE 4
-            IF currFig#(4) <> 0 OR currFig#(5) = 0 THEN
-                PRINT USING u2$; currFig#(4);
+            IF CurrFig#(4) <> 0 OR CurrFig#(5) = 0 THEN
+                PRINT USING u2$; CurrFig#(4);
             END IF
         CASE 5
-            IF currFig#(5) <> 0 THEN
-                PRINT USING u2$; currFig#(5);
+            IF CurrFig#(5) <> 0 THEN
+                PRINT USING u2$; CurrFig#(5);
             END IF
     END SELECT
     RETURN
@@ -469,45 +513,45 @@ EditTransHideCursor:
 
 EditTransEditItem:
 
-    currRecord = currTopline + currRow - 1
-    COLOR colors(8, monitorType), colors(9, monitorType)
+    CurrRecord = CurrTopline + CurrRow - 1
+    COLOR Colors(8, ColorPref), Colors(9, ColorPref)
 
-    SELECT CASE currCol
+    SELECT CASE CurrCol
         CASE 1, 2, 3
-            kbd$ = GetString$(currRow + 4, col(currCol), kbd$, new$, vis(currCol), max(currCol))
-            currString$(currCol) = new$
+            Kbd$ = GetString$(CurrRow + 4, Col(CurrCol), Kbd$, new$, Vis(CurrCol), Max(CurrCol))
+            CurrString$(CurrCol) = new$
             GOSUB EditTransPutLine
             GOSUB EditTransGetLine
         CASE 4
             DO
-                kbd$ = GetString$(currRow + 4, col(4), kbd$, new$, vis(4), max(4))
+                Kbd$ = GetString$(CurrRow + 4, Col(4), Kbd$, new$, Vis(4), Max(4))
                 new4# = VAL(new$)
             LOOP WHILE new4# > 99999.99 OR new4# < 0
 
-            a = currRecord
-            WHILE a <= maxRecord
-                balance#(a) = balance#(a) + new4# - currFig#(4) + currFig#(5)
-                a = a + 1
+            A = CurrRecord
+            WHILE A <= MaxRecord
+                Balance#(A) = Balance#(A) + new4# - CurrFig#(4) + CurrFig#(5)
+                A = A + 1
             WEND
-            currFig#(4) = new4#
-            currFig#(5) = 0
+            CurrFig#(4) = new4#
+            CurrFig#(5) = 0
             GOSUB EditTransPutLine
             GOSUB EditTransGetLine
             GOSUB EditTransPrintBalances
             GOSUB EditTransWriteBalance
         CASE 5
             DO
-                kbd$ = GetString$(currRow + 4, col(5), kbd$, new$, vis(5), max(5))
+                Kbd$ = GetString$(CurrRow + 4, Col(5), Kbd$, new$, Vis(5), Max(5))
                 new5# = VAL(new$)
             LOOP WHILE new4# > 99999.99 OR new5# < 0
 
-            a = currRecord
-            WHILE a <= maxRecord
-                balance#(a) = balance#(a) - new5# + currFig#(5) - currFig#(4)
-                a = a + 1
+            A = CurrRecord
+            WHILE A <= MaxRecord
+                Balance#(A) = Balance#(A) - new5# + CurrFig#(5) - CurrFig#(4)
+                A = A + 1
             WEND
-            currFig#(4) = 0
-            currFig#(5) = new5#
+            CurrFig#(4) = 0
+            CurrFig#(5) = new5#
             GOSUB EditTransPutLine
             GOSUB EditTransGetLine
             GOSUB EditTransPrintBalances
@@ -518,88 +562,88 @@ EditTransEditItem:
     RETURN
 
 EditTransMoveUp:
-    IF currRow = 1 THEN
-        IF currTopline = 1 THEN
+    IF CurrRow = 1 THEN
+        IF CurrTopline = 1 THEN
             BEEP
         ELSE
             ScrollDown
-            currTopline = currTopline - 1
+            CurrTopline = CurrTopline - 1
             GOSUB EditTransGetLine
             GOSUB EditTransPrintLine
         END IF
     ELSE
-        currRow = currRow - 1
+        CurrRow = CurrRow - 1
         GOSUB EditTransGetLine
     END IF
     RETURN
 
 EditTransMoveDown:
-    IF (currRow + currTopline - 1) >= maxRecord THEN
+    IF (CurrRow + CurrTopline - 1) >= MaxRecord THEN
         BEEP
     ELSE
-        IF currRow = 19 THEN
+        IF CurrRow = 19 THEN
             ScrollUp
-            currTopline = currTopline + 1
+            CurrTopline = CurrTopline + 1
             GOSUB EditTransGetLine
             GOSUB EditTransPrintLine
         ELSE
-            currRow = currRow + 1
+            CurrRow = CurrRow + 1
             GOSUB EditTransGetLine
         END IF
     END IF
 
 
 EditTransPrintLine:
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    currRecord = currTopline + currRow - 1
-    LOCATE currRow + 4, 2
-    IF currRecord = maxRecord + 1 THEN
-        LOCATE currRow + 4, 2
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    CurrRecord = CurrTopline + CurrRow - 1
+    LOCATE CurrRow + 4, 2
+    IF CurrRecord = MaxRecord + 1 THEN
+        LOCATE CurrRow + 4, 2
         PRINT u1x$;
-    ELSEIF currRecord > maxRecord THEN
-        LOCATE currRow + 4, 2
+    ELSEIF CurrRecord > MaxRecord THEN
+        LOCATE CurrRow + 4, 2
         PRINT u1$;
     ELSE
-        PRINT USING u$; currString$(1); currString$(2); currString$(3);
-        IF currFig#(5) = 0 THEN
-            PRINT USING u2$ + "≥" + u4$ + "≥" + u3$; currFig#(4); balance#(currRecord)
+        PRINT USING u$; CurrString$(1); CurrString$(2); CurrString$(3);
+        IF CurrFig#(5) = 0 THEN
+            PRINT USING u2$ + "≥" + u4$ + "≥" + u3$; CurrFig#(4); Balance#(CurrRecord)
         ELSE
-            PRINT USING u4$ + "≥" + u2$ + "≥" + u3$; currFig#(5); balance#(currRecord)
+            PRINT USING u4$ + "≥" + u2$ + "≥" + u3$; CurrFig#(5); Balance#(CurrRecord)
         END IF
     END IF
     RETURN
 
 EditTransPrintBalances:
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    FOR a = 1 TO 19
-        currRecord = currTopline + a - 1
-        IF currRecord <= maxRecord THEN
-            LOCATE 4 + a, 70
-            PRINT USING u3$; balance#(currTopline + a - 1);
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    FOR A = 1 TO 19
+        CurrRecord = CurrTopline + A - 1
+        IF CurrRecord <= MaxRecord THEN
+            LOCATE 4 + A, 70
+            PRINT USING u3$; Balance#(CurrTopline + A - 1);
         END IF
-    NEXT a
+    NEXT A
     RETURN
 
 EditTransDeleteRecord:
-    IF maxRecord = 1 THEN
+    IF MaxRecord = 1 THEN
         BEEP
     ELSE
-        currRecord = currTopline + currRow - 1
-        maxRecord = maxRecord - 1
-        a = currRecord
-        WHILE a <= maxRecord
-            GET #1, a + 2
-            PUT #1, a + 1
-            balance#(a) = balance#(a + 1) - currFig#(4) + currFig#(5)
-            a = a + 1
+        CurrRecord = CurrTopline + CurrRow - 1
+        MaxRecord = MaxRecord - 1
+        A = CurrRecord
+        WHILE A <= MaxRecord
+            GET #1, A + 2
+            PUT #1, A + 1
+            Balance#(A) = Balance#(A + 1) - CurrFig#(4) + CurrFig#(5)
+            A = A + 1
         WEND
-        
+
         LSET valid$ = "THISISVALID"
-        LSET ioMaxRecord$ = Cvit$(maxRecord)
+        LSET IoMaxRecord$ = Cvit$(MaxRecord)
         PUT #1, 1
         GOSUB EditTransPrintWholeScreen
-        currRecord = currTopline + currRow - 1
-        IF currRecord > maxRecord THEN
+        CurrRecord = CurrTopline + CurrRow - 1
+        IF CurrRecord > MaxRecord THEN
             GOSUB EditTransMoveUp
         END IF
         GOSUB EditTransGetLine
@@ -608,115 +652,119 @@ EditTransDeleteRecord:
     RETURN
 
 EditTransAddRecord:
-    currRecord = currTopline + currRow - 1
-    a = maxRecord
-    WHILE a > currRecord
-        GET #1, a + 1
-        PUT #1, a + 2
-        balance#(a + 1) = balance#(a)
-        a = a - 1
+    CurrRecord = CurrTopline + CurrRow - 1
+    A = MaxRecord
+    WHILE A > CurrRecord
+        GET #1, A + 1
+        PUT #1, A + 2
+        Balance#(A + 1) = Balance#(A)
+        A = A - 1
     WEND
-    balance#(currRecord + 1) = balance#(currRecord)
-    maxRecord = maxRecord + 1
-    LSET ioDate$ = ""
-    LSET ioRef$ = ""
-    LSET ioDesc$ = ""
-    LSET ioFig1$ = MKD$(0)
-    LSET ioFig2$ = MKD$(0)
-    PUT #1, currRecord + 2
+    Balance#(CurrRecord + 1) = Balance#(CurrRecord)
+    MaxRecord = MaxRecord + 1
+    LSET IoDate$ = ""
+    LSET IoRef$ = ""
+    LSET IoDesc$ = ""
+    LSET IoFig1$ = MKD$(0)
+    LSET IoFig2$ = MKD$(0)
+    PUT #1, CurrRecord + 2
 
     LSET valid$ = "THISISVALID"
-    LSET ioMaxRecord$ = Cvit$(maxRecord)
+    LSET IoMaxRecord$ = Cvit$(MaxRecord)
     PUT #1, 1
     GOSUB EditTransPrintWholeScreen
     GOSUB EditTransGetLine
     RETURN
 
 EditTransPrintWholeScreen:
-    temp = currRow
-    FOR currRow = 1 TO 19
-        currRecord = currTopline + currRow - 1
-        IF currRecord <= maxRecord THEN
+    temp = CurrRow
+    FOR CurrRow = 1 TO 19
+        CurrRecord = CurrTopline + CurrRow - 1
+        IF CurrRecord <= MaxRecord THEN
             GOSUB EditTransGetLine
         END IF
         GOSUB EditTransPrintLine
-    NEXT currRow
-    currRow = temp
+    NEXT CurrRow
+    CurrRow = temp
     RETURN
 
 EditTransWriteBalance:
     GET #1, 1
-    LSET ioBalance$ = MKD$(balance#(maxRecord))
+    LSET IoBalance$ = MKD$(Balance#(MaxRecord))
     PUT #1, 1
     RETURN
 
 EditTransPutLine:
-    currRecord = currTopline + currRow - 1
-    LSET ioDate$ = currString$(1)
-    LSET ioRef$ = currString$(2)
-    LSET ioDesc$ = currString$(3)
-    LSET ioFig1$ = MKD$(currFig#(4))
-    LSET ioFig2$ = MKD$(currFig#(5))
-    PUT #1, currRecord + 1
+    CurrRecord = CurrTopline + CurrRow - 1
+    LSET IoDate$ = CurrString$(1)
+    LSET IoRef$ = CurrString$(2)
+    LSET IoDesc$ = CurrString$(3)
+    LSET IoFig1$ = MKD$(CurrFig#(4))
+    LSET IoFig2$ = MKD$(CurrFig#(5))
+    PUT #1, CurrRecord + 1
     RETURN
 
 EditTransGetLine:
-    currRecord = currTopline + currRow - 1
-    GET #1, currRecord + 1
-    currString$(1) = ioDate$
-    currString$(2) = ioRef$
-    currString$(3) = ioDesc$
-    currFig#(4) = CVD(ioFig1$)
-    currFig#(5) = CVD(ioFig2$)
+    CurrRecord = CurrTopline + CurrRow - 1
+    GET #1, CurrRecord + 1
+    CurrString$(1) = IoDate$
+    CurrString$(2) = IoRef$
+    CurrString$(3) = IoDesc$
+    CurrFig#(4) = CVD(IoFig1$)
+    CurrFig#(5) = CVD(IoFig2$)
     RETURN
 END SUB
 
-SUB fancyCls (dots, background)
+'Clears screen in the right color, and draws nice dots.
+SUB FancyCls (Dots, Background)
 
-    VIEW PRINT 2 TO 24
-    COLOR dots, background
+    VIEW PRINT 2 TO maxrow - 1
+    COLOR Dots, Background
     CLS 2
 
-    FOR a = 95 TO 1820 STEP 45
-        row = a / 80 + 1
-        col = a MOD 80 + 1
-        LOCATE row, col
+    FOR A = 95 TO 80 * (maxrow - 2) STEP 45
+        Row = A / 80 + 1
+        Col = A MOD 80 + 1
+        LOCATE Row, Col
         PRINT CHR$(250);
-    NEXT a
+    NEXT A
 
     VIEW PRINT
 
 END SUB
 
-FUNCTION GetString$ (row, col, start$, end$, vis, max)
+'Given a row and col, and an initial string, edit a string
+'VIS is the length of the visible field of entry
+'MAX is the maximum number of characters allowed in the string
+FUNCTION GetString$ (Row, Col, Start$, End$, Vis, Max)
 
-    
-    curr$ = Trim$(LEFT$(start$, max))
+
+    curr$ = Trim$(LEFT$(Start$, Max))
 
     LOCATE , , 1
 
-    finished = FALSE
+    Finished = FALSE
     DO
         GOSUB GetStringShowText
         GOSUB GetStringGetKey
 
-        IF LEN(kbd$) > 1 THEN
-            finished = TRUE
-            GetString$ = kbd$
+        IF LEN(Kbd$) > 1 THEN
+            Finished = TRUE
+            GetString$ = Kbd$
         ELSE
-            SELECT CASE kbd$
+            SELECT CASE Kbd$
                 CASE CHR$(13), CHR$(27), CHR$(9)
-                    finished = TRUE
-                    GetString$ = kbd$
-                
+                    Finished = TRUE
+                    GetString$ = Kbd$
+
                 CASE CHR$(8)
                     IF curr$ <> "" THEN
                         curr$ = LEFT$(curr$, LEN(curr$) - 1)
                     END IF
 
                 CASE " " TO "}"
-                    IF LEN(curr$) < max THEN
-                        curr$ = curr$ + kbd$
+                    IF LEN(curr$) < Max THEN
+                        curr$ = curr$ + Kbd$
                     END IF
 
                 CASE ELSE
@@ -724,27 +772,27 @@ FUNCTION GetString$ (row, col, start$, end$, vis, max)
             END SELECT
         END IF
 
-    LOOP UNTIL finished
+    LOOP UNTIL Finished
 
-    end$ = curr$
+    End$ = curr$
 
     EXIT FUNCTION
-    
+
 
 GetStringShowText:
-    LOCATE row, col
-    IF LEN(curr$) > vis THEN
-        PRINT RIGHT$(curr$, vis);
+    LOCATE Row, Col
+    IF LEN(curr$) > Vis THEN
+        PRINT RIGHT$(curr$, Vis);
     ELSE
-        PRINT curr$; SPACE$(vis - LEN(curr$));
-        LOCATE row, col + LEN(curr$)
+        PRINT curr$; SPACE$(Vis - LEN(curr$));
+        LOCATE Row, Col + LEN(curr$)
     END IF
     RETURN
 
 GetStringGetKey:
-    kbd$ = ""
-    WHILE kbd$ = ""
-        kbd$ = INKEY$
+    Kbd$ = ""
+    WHILE Kbd$ = ""
+        Kbd$ = INKEY$
     WEND
     RETURN
 
@@ -752,15 +800,25 @@ GetStringGetKey:
 
 END FUNCTION
 
+'Read colors in, and set up assembly routines
 SUB Initialize
 
+    DEF SEG = 0
+    IF PEEK(&H484) = 0 THEN
+        maxrow = 25
+    ELSE
+        maxrow = PEEK(&H484) + 1
+    END IF
+    DEF SEG
+
+    WIDTH , maxrow
     VIEW PRINT
 
-    FOR colorset = 1 TO 4
-        FOR x = 1 TO 10
-            READ colors(x, colorset)
-        NEXT x
-    NEXT colorset
+    FOR ColorSet = 1 TO 4
+        FOR X = 1 TO 10
+            READ Colors(X, ColorSet)
+        NEXT X
+    NEXT ColorSet
 
     LoadState
 
@@ -782,70 +840,84 @@ SUB Initialize
 
 END SUB
 
-SUB lcenter (text$)
-    PRINT TAB(41 - LEN(text$) / 2); text$
+'Center TEXT$ on the line printer
+SUB Lcenter (Text$)
+    LPRINT TAB(41 - LEN(Text$) / 2); Text$
 END SUB
 
+'Load the color preference and the account info from MONEY.DAT
 SUB LoadState
 
     OPEN "money.dat" FOR INPUT AS #1
-    INPUT #1, monitorType
+    INPUT #1, ColorPref
 
-    FOR a = 1 TO 18
-        LINE INPUT #1, account(a).title
-        LINE INPUT #1, account(a).aType
-        LINE INPUT #1, account(a).desc
-    NEXT a
-    
+    FOR A = 1 TO 18
+        LINE INPUT #1, account(A).Title
+        LINE INPUT #1, account(A).AType
+        LINE INPUT #1, account(A).Desc
+    NEXT A
+
     CLOSE
 
 END SUB
 
-SUB MakeBackup
-END SUB
+'Handles Menu Selection for a single menu (either sub menu, or menu bar)
+'currChoiceX  :  Number of current choice
+'maxChoice    :  Number of choices in the list
+'choice$()    :  Array with the text of the choices
+'itemRow()    :  Array with the row of the choices
+'itemCol()    :  Array with the col of the choices
+'help$()      :  Array with the help text for each choice
+'barMode      :  Boolean:  TRUE = menu bar style, FALSE = drop down style
+'
+'  This function sinply returns the number of the choice that was made
+'  by changing currChoiceX, and returns the scan code of the key that was
+'  pressed to exit
+'
+FUNCTION Menu (CurrChoiceX, MaxChoice, Choice$(), ItemRow(), ItemCol(), Help$(), BarMode)
 
-FUNCTION Menu (currChoiceX, maxChoice, choice$(), itemRow(), itemCol(), help$(), barMode)
-    currChoice = currChoiceX
+    currChoice = CurrChoiceX
 
     'Color in Help Bar
-    COLOR colors(5, monitorType), colors(4, monitorType)
-    LOCATE 25, 1
+    COLOR Colors(5, ColorPref), Colors(4, ColorPref)
+    LOCATE maxrow, 1
     PRINT SPACE$(80);
 
     'if in bar mode, color in menu bar, else color box/shadow
-    IF barMode THEN
-        COLOR colors(7, monitorType), colors(4, monitorType)
+    'bar mode means you are currently in the menu bar, not a sub menu
+    IF BarMode THEN
+        COLOR Colors(7, ColorPref), Colors(4, ColorPref)
         LOCATE 1, 1
         PRINT SPACE$(80);
     ELSE
-        COLOR colors(7, monitorType), colors(4, monitorType)
-        box itemRow(1) - 1, itemCol(1) - 1, itemRow(maxChoice) + 1, itemCol(1) + LEN(choice$(1)) + 1
-        
-        COLOR colors(10, monitorType), colors(6, monitorType)
-        FOR a = 1 TO maxChoice + 1
-            LOCATE itemRow(1) + a - 1, itemCol(1) + LEN(choice$(1)) + 2
+        COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+        Box ItemRow(1) - 1, ItemCol(1) - 1, ItemRow(MaxChoice) + 1, ItemCol(1) + LEN(Choice$(1)) + 1
+
+        COLOR Colors(10, ColorPref), Colors(6, ColorPref)
+        FOR A = 1 TO MaxChoice + 1
+            LOCATE ItemRow(1) + A - 1, ItemCol(1) + LEN(Choice$(1)) + 2
             PRINT CHR$(178); CHR$(178);
-        NEXT a
-        LOCATE itemRow(maxChoice) + 2, itemCol(maxChoice) + 2
-        PRINT STRING$(LEN(choice$(maxChoice)) + 2, 178);
+        NEXT A
+        LOCATE ItemRow(MaxChoice) + 2, ItemCol(MaxChoice) + 2
+        PRINT STRING$(LEN(Choice$(MaxChoice)) + 2, 178);
     END IF
-    
+
     'print the choices
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    FOR a = 1 TO maxChoice
-        LOCATE itemRow(a), itemCol(a)
-        PRINT choice$(a);
-    NEXT a
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    FOR A = 1 TO MaxChoice
+        LOCATE ItemRow(A), ItemCol(A)
+        PRINT Choice$(A);
+    NEXT A
 
-    finished = FALSE
+    Finished = FALSE
 
-    WHILE NOT finished
-        
+    WHILE NOT Finished
+
         GOSUB MenuShowCursor
         GOSUB MenuGetKey
         GOSUB MenuHideCursor
 
-        SELECT CASE kbd$
+        SELECT CASE Kbd$
             CASE CHR$(0) + "H": GOSUB MenuUp
             CASE CHR$(0) + "P": GOSUB MenuDown
             CASE CHR$(0) + "K": GOSUB MenuLeft
@@ -862,96 +934,99 @@ FUNCTION Menu (currChoiceX, maxChoice, choice$(), itemRow(), itemCol(), help$(),
 
 
 MenuEnter:
-    finished = TRUE
+    Finished = TRUE
     RETURN
 
 MenuEscape:
     currChoice = 0
-    finished = TRUE
+    Finished = TRUE
     RETURN
 
 MenuUp:
-    IF barMode THEN
+    IF BarMode THEN
         BEEP
     ELSE
-        currChoice = (currChoice + maxChoice - 2) MOD maxChoice + 1
+        currChoice = (currChoice + MaxChoice - 2) MOD MaxChoice + 1
     END IF
     RETURN
 
 MenuLeft:
-    IF barMode THEN
-        currChoice = (currChoice + maxChoice - 2) MOD maxChoice + 1
+    IF BarMode THEN
+        currChoice = (currChoice + MaxChoice - 2) MOD MaxChoice + 1
     ELSE
         currChoice = -2
-        finished = TRUE
+        Finished = TRUE
     END IF
     RETURN
 
 MenuRight:
-    IF barMode THEN
-        currChoice = (currChoice) MOD maxChoice + 1
+    IF BarMode THEN
+        currChoice = (currChoice) MOD MaxChoice + 1
     ELSE
         currChoice = -3
-        finished = TRUE
+        Finished = TRUE
     END IF
     RETURN
 
 MenuDown:
-    IF barMode THEN
-        finished = TRUE
+    IF BarMode THEN
+        Finished = TRUE
     ELSE
-        currChoice = (currChoice) MOD maxChoice + 1
+        currChoice = (currChoice) MOD MaxChoice + 1
     END IF
     RETURN
 
 MenuShowCursor:
-    COLOR colors(8, monitorType), colors(9, monitorType)
-    LOCATE itemRow(currChoice), itemCol(currChoice)
-    PRINT choice$(currChoice);
-    printHelpLine help$(currChoice)
+    COLOR Colors(8, ColorPref), Colors(9, ColorPref)
+    LOCATE ItemRow(currChoice), ItemCol(currChoice)
+    PRINT Choice$(currChoice);
+    PrintHelpLine Help$(currChoice)
     RETURN
 
 MenuGetKey:
-    kbd$ = ""
-    WHILE kbd$ = ""
-        kbd$ = INKEY$
+    Kbd$ = ""
+    WHILE Kbd$ = ""
+        Kbd$ = INKEY$
     WEND
     RETURN
 
 MenuHideCursor:
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    LOCATE itemRow(currChoice), itemCol(currChoice)
-    PRINT choice$(currChoice);
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    LOCATE ItemRow(currChoice), ItemCol(currChoice)
+    PRINT Choice$(currChoice);
     RETURN
 
 
 END FUNCTION
 
+'This is the heart of the application.  This sub uses the function
+'MENU to do a menu bar.  Then it uses MENU again to do the sub menu.
+'Then it calls the appropriate function to handle the users choice
 SUB MenuSystem
 
-    DIM choice$(20), menuRow(20), menuCol(20), help$(20)
+    DIM Choice$(20), menuRow(20), menuCol(20), Help$(20)
 
-    choice = 1
-    finished = FALSE
+    Choice = 1
+    Finished = FALSE
 
-    WHILE NOT finished
-        fancyCls colors(2, monitorType), colors(1, monitorType)
+    WHILE NOT Finished
+        FancyCls Colors(2, ColorPref), Colors(1, ColorPref)
         GOSUB MenuSystemMain
 
         subchoice = -1
         WHILE subchoice < 0
-            SELECT CASE choice
+            SELECT CASE Choice
                 CASE 1: GOSUB MenuSystemFile
                 CASE 2: GOSUB MenuSystemEdit
                 CASE 3: GOSUB MenuSystemAccount
                 CASE 4: GOSUB MenuSystemReport
                 CASE 5: GOSUB MenuSystemColors
             END SELECT
-            fancyCls colors(2, monitorType), colors(1, monitorType)
+            FancyCls Colors(2, ColorPref), Colors(1, ColorPref)
 
             SELECT CASE subchoice
-                CASE -2: choice = (choice + 3) MOD 5 + 1
-                CASE -3: choice = (choice) MOD 5 + 1
+                CASE -2: Choice = (Choice + 3) MOD 5 + 1
+                CASE -3: Choice = (Choice) MOD 5 + 1
             END SELECT
         WEND
     WEND
@@ -959,54 +1034,54 @@ SUB MenuSystem
 
 
 MenuSystemMain:
-    choice$(1) = " File "
-    choice$(2) = " Accounts "
-    choice$(3) = " Transactions "
-    choice$(4) = " Reports "
-    choice$(5) = " Colors "
+    Choice$(1) = " File "
+    Choice$(2) = " Accounts "
+    Choice$(3) = " Transactions "
+    Choice$(4) = " Reports "
+    Choice$(5) = " Colors "
 
     menuRow(1) = 1: menuCol(1) = 2
     menuRow(2) = 1: menuCol(2) = 8
     menuRow(3) = 1: menuCol(3) = 18
     menuRow(4) = 1: menuCol(4) = 32
     menuRow(5) = 1: menuCol(5) = 41
-    
-    help$(1) = "Make backups, Restore from Backup, Exit the Money Manager"
-    help$(2) = "Add New Accounts, Delete old Accounts"
-    help$(3) = "Select an account to work with"
-    help$(4) = "Select a report to print"
-    help$(5) = "Select your favorite screen colors"
-    
+
+    Help$(1) = "Make backups, Restore from Backup, Exit the Money Manager"
+    Help$(2) = "Add New Accounts, Delete old Accounts"
+    Help$(3) = "Select an account to work with"
+    Help$(4) = "Select a report to print"
+    Help$(5) = "Select your favorite screen colors"
+
     DO
-        NewChoice = Menu((choice), 5, choice$(), menuRow(), menuCol(), help$(), TRUE)
+        NewChoice = Menu((Choice), 5, Choice$(), menuRow(), menuCol(), Help$(), TRUE)
     LOOP WHILE NewChoice = 0
-    choice = NewChoice
+    Choice = NewChoice
     RETURN
 
 MenuSystemFile:
-    choice$(1) = " Exit           "
+    Choice$(1) = " Exit           "
 
     menuRow(1) = 3: menuCol(1) = 2
 
-    help$(1) = "Exit the Money Manager"
+    Help$(1) = "Exit the Money Manager"
 
-    subchoice = Menu(1, 1, choice$(), menuRow(), menuCol(), help$(), FALSE)
+    subchoice = Menu(1, 1, Choice$(), menuRow(), menuCol(), Help$(), FALSE)
 
     SELECT CASE subchoice
-        CASE 1: finished = TRUE
+        CASE 1: Finished = TRUE
         CASE ELSE
     END SELECT
     RETURN
 
 
 MenuSystemEdit:
-    choice$(1) = " Edit Account Titles "
+    Choice$(1) = " Edit Account Titles "
 
     menuRow(1) = 3: menuCol(1) = 8
-    
-    help$(1) = "Add/Edit/Delete Accounts."
 
-    subchoice = Menu(1, 1, choice$(), menuRow(), menuCol(), help$(), FALSE)
+    Help$(1) = "Add/Edit/Delete Accounts."
+
+    subchoice = Menu(1, 1, Choice$(), menuRow(), menuCol(), Help$(), FALSE)
 
     SELECT CASE subchoice
         CASE 1: EditAccounts
@@ -1017,18 +1092,18 @@ MenuSystemEdit:
 
 MenuSystemAccount:
 
-    FOR a = 1 TO 18
-        IF Trim$(account(a).title) = "" THEN
-            choice$(a) = RIGHT$(STR$(a), 2) + ". ------------------- "
+    FOR A = 1 TO 18
+        IF Trim$(account(A).Title) = "" THEN
+            Choice$(A) = RIGHT$(STR$(A), 2) + ". ------------------- "
         ELSE
-            choice$(a) = RIGHT$(STR$(a), 2) + ". " + account(a).title
+            Choice$(A) = RIGHT$(STR$(A), 2) + ". " + account(A).Title
         END IF
-        menuRow(a) = a + 2
-        menuCol(a) = 18
-        help$(a) = account(a).desc
-    NEXT a
+        menuRow(A) = A + 2
+        menuCol(A) = 18
+        Help$(A) = account(A).Desc
+    NEXT A
 
-    subchoice = Menu(1, 18, choice$(), menuRow(), menuCol(), help$(), FALSE)
+    subchoice = Menu(1, 18, Choice$(), menuRow(), menuCol(), Help$(), FALSE)
 
     IF subchoice > 0 THEN
         EditTrans (subchoice)
@@ -1037,22 +1112,22 @@ MenuSystemAccount:
 
 
 MenuSystemReport:
-    choice$(1) = " Net Worth Report       "
+    Choice$(1) = " Net Worth Report       "
     menuRow(1) = 3: menuCol(1) = 32
-    help$(1) = "Computes your net worth."
+    Help$(1) = "Computes your net worth."
 
-    FOR a = 1 TO 18
-        IF Trim$(account(a).title) = "" THEN
-            choice$(a + 1) = RIGHT$(STR$(a), 2) + ". ------------------- "
+    FOR A = 1 TO 18
+        IF Trim$(account(A).Title) = "" THEN
+            Choice$(A + 1) = RIGHT$(STR$(A), 2) + ". ------------------- "
         ELSE
-            choice$(a + 1) = RIGHT$(STR$(a), 2) + ". " + account(a).title
+            Choice$(A + 1) = RIGHT$(STR$(A), 2) + ". " + account(A).Title
         END IF
-        menuRow(a + 1) = a + 3
-        menuCol(a + 1) = 32
-        help$(a + 1) = account(a).desc
-    NEXT a
+        menuRow(A + 1) = A + 3
+        menuCol(A + 1) = 32
+        Help$(A + 1) = account(A).Desc
+    NEXT A
 
-    subchoice = Menu(1, 19, choice$(), menuRow(), menuCol(), help$(), FALSE)
+    subchoice = Menu(1, 19, Choice$(), menuRow(), menuCol(), Help$(), FALSE)
 
     SELECT CASE subchoice
         CASE 1
@@ -1064,26 +1139,26 @@ MenuSystemReport:
     RETURN
 
 MenuSystemColors:
-    choice$(1) = " Monochrome Scheme "
-    choice$(2) = " Blue/Cyan Scheme  "
-    choice$(3) = " Cyan/Blue Scheme  "
-    choice$(4) = " Grey/Red Scheme   "
+    Choice$(1) = " Monochrome Scheme "
+    Choice$(2) = " Blue/Cyan Scheme  "
+    Choice$(3) = " Cyan/Blue Scheme  "
+    Choice$(4) = " Grey/Red Scheme   "
 
     menuRow(1) = 3: menuCol(1) = 41
     menuRow(2) = 4: menuCol(2) = 41
     menuRow(3) = 5: menuCol(3) = 41
     menuRow(4) = 6: menuCol(4) = 41
 
-    help$(1) = "Proper color scheme for monochrome and LCD displays"
-    help$(2) = "Color scheme featuring cyan"
-    help$(3) = "Color scheme featuring blue"
-    help$(4) = "Color scheme featuring red"
+    Help$(1) = "Proper color scheme for monochrome and LCD displays"
+    Help$(2) = "Color scheme featuring cyan"
+    Help$(3) = "Color scheme featuring blue"
+    Help$(4) = "Color scheme featuring red"
 
-    subchoice = Menu(1, 4, choice$(), menuRow(), menuCol(), help$(), FALSE)
+    subchoice = Menu(1, 4, Choice$(), menuRow(), menuCol(), Help$(), FALSE)
 
     SELECT CASE subchoice
         CASE 1 TO 4
-            monitorType = subchoice
+            ColorPref = subchoice
             SaveState
         CASE ELSE
     END SELECT
@@ -1092,6 +1167,7 @@ MenuSystemColors:
 
 END SUB
 
+'Prints the net worth report to the line printer
 SUB NetWorthReport
 
     DIM assetIndex(18), liabilityIndex(18)
@@ -1099,118 +1175,109 @@ SUB NetWorthReport
     maxAsset = 0
     maxLiability = 0
 
-    FOR a = 1 TO 18
-        IF account(a).aType = "A" THEN
+    FOR A = 1 TO 18
+        IF account(A).AType = "A" THEN
             maxAsset = maxAsset + 1
-            assetIndex(maxAsset) = a
-        ELSEIF account(a).aType = "L" THEN
+            assetIndex(maxAsset) = A
+        ELSEIF account(A).AType = "L" THEN
             maxLiability = maxLiability + 1
-            liabilityIndex(maxLiability) = a
+            liabilityIndex(maxLiability) = A
         END IF
-    NEXT a
+    NEXT A
 
-    fancyCls colors(2, monitorType), colors(1, monitorType)
-    printHelpLine ""
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    box 8, 20, 14, 62
-    center 10, "Prepare printer for Report!"
-    center 12, "Hit <Enter> to print, or <Esc> to abort"
+    FancyCls Colors(2, ColorPref), Colors(1, ColorPref)
+    PrintHelpLine ""
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    Box 8, 20, 14, 62
+    Center 10, "Prepare printer for Report!"
+    Center 12, "Hit <Enter> to print, or <Esc> to abort"
 
-    DO: kbd$ = INKEY$: LOOP WHILE kbd$ <> CHR$(13) AND kbd$ <> CHR$(27)
+    DO: Kbd$ = INKEY$: LOOP WHILE Kbd$ <> CHR$(13) AND Kbd$ <> CHR$(27)
 
-    IF kbd$ = CHR$(13) THEN
+    IF Kbd$ = CHR$(13) THEN
         CLS
-        PRINT "THIS IS A TEMPORARY PRINT ROUTINE"
-       
         u0$ = "                     \                  \ "
         u1$ = "                          \                  \  +$$,###.##"
         u2$ = "                                                ----------"
         u3$ = "                                                =========="
-        PRINT : PRINT : PRINT : PRINT : PRINT : PRINT
-        lcenter "T H E   M O N E Y   M A N A G E R"
-        PRINT : PRINT
-        lcenter "NET WORTH REPORT -- " + DATE$
-        lcenter "-------------------------------------------"
-        PRINT USING u0$; "ASSETS:"
+        LPRINT : LPRINT : LPRINT : LPRINT : LPRINT : LPRINT
+        Lcenter "T H E   M O N E Y   M A N A G E R"
+        LPRINT : LPRINT
+        Lcenter "NET WORTH REPORT -- " + DATE$
+        Lcenter "-------------------------------------------"
+        LPRINT USING u0$; "ASSETS:"
         assetTotal# = 0
-        a = 1
-        WHILE a <= maxAsset
-            file$ = "money." + Cvit$(assetIndex(a))
-            OPEN file$ FOR RANDOM AS #1 LEN = 84
-            FIELD #1, 11 AS valid$, 5 AS ioMaxRecord$, 8 AS ioBalance$
+        A = 1
+        WHILE A <= maxAsset
+            File$ = "money." + Cvit$(assetIndex(A))
+            OPEN File$ FOR RANDOM AS #1 LEN = 84
+            FIELD #1, 11 AS valid$, 5 AS IoMaxRecord$, 8 AS IoBalance$
             GET #1, 1
             IF valid$ = "THISISVALID" THEN
-                PRINT USING u1$; account(assetIndex(a)).title; CVD(ioBalance$)
-                assetTotal# = assetTotal# + CVD(ioBalance$)
+                LPRINT USING u1$; account(assetIndex(A)).Title; CVD(IoBalance$)
+                assetTotal# = assetTotal# + CVD(IoBalance$)
             END IF
             CLOSE
-            a = a + 1
+            A = A + 1
         WEND
-        PRINT u2$
-        PRINT USING u1$; "Total assets"; assetTotal#
-        PRINT
-        PRINT
-        PRINT USING u0$; "LIABILITIES:"
+        LPRINT u2$
+        LPRINT USING u1$; "Total assets"; assetTotal#
+        LPRINT
+        LPRINT
+        LPRINT USING u0$; "LIABILITIES:"
         liabilityTotal# = 0
-        a = 1
-        WHILE a <= maxLiability
-            file$ = "money." + Cvit$(liabilityIndex(a))
-            OPEN file$ FOR RANDOM AS #1 LEN = 84
-            FIELD #1, 11 AS valid$, 5 AS ioMaxRecord$, 8 AS ioBalance$
+        A = 1
+        WHILE A <= maxLiability
+            File$ = "money." + Cvit$(liabilityIndex(A))
+            OPEN File$ FOR RANDOM AS #1 LEN = 84
+            FIELD #1, 11 AS valid$, 5 AS IoMaxRecord$, 8 AS IoBalance$
             GET #1, 1
             IF valid$ = "THISISVALID" THEN
-                PRINT USING u1$; account(liabilityIndex(a)).title; CVD(ioBalance$)
-                liabilityTotal# = liabilityTotal# + CVD(ioBalance$)
+                LPRINT USING u1$; account(liabilityIndex(A)).Title; CVD(IoBalance$)
+                liabilityTotal# = liabilityTotal# + CVD(IoBalance$)
             END IF
             CLOSE
-            a = a + 1
+            A = A + 1
         WEND
-        PRINT u2$
-        PRINT USING u1$; "Total liability"; liabilityTotal#
-        PRINT
+        LPRINT u2$
+        LPRINT USING u1$; "Total liability"; liabilityTotal#
+        LPRINT
 
-        PRINT
-        PRINT u2$
-        PRINT USING u1$; "NET WORTH"; assetTotal# - liabilityTotal#
-        PRINT u3$
+        LPRINT
+        LPRINT u2$
+        LPRINT USING u1$; "NET WORTH"; assetTotal# - liabilityTotal#
+        LPRINT u3$
     END IF
 
 END SUB
 
-SUB pause
+' Given a help text string, print it on the bottom row, in the proper color
+SUB PrintHelpLine (Help$)
 
-    WHILE INKEY$ <> "": WEND
-    WHILE INKEY$ = "": WEND
-
-END SUB
-
-SUB printHelpLine (help$)
-
-    COLOR colors(5, monitorType), colors(4, monitorType)
-    LOCATE 25, 1
+    COLOR Colors(5, ColorPref), Colors(4, ColorPref)
+    LOCATE maxrow, 1
     PRINT SPACE$(80);
-    center 25, help$
+    Center maxrow, Help$
 
 END SUB
 
-SUB RestoreBackup
-END SUB
-
+'Save the color preference and the account info
 SUB SaveState
 
     OPEN "money.dat" FOR OUTPUT AS #2
-    PRINT #2, monitorType
-    
-    FOR a = 1 TO 18
-        PRINT #2, account(a).title
-        PRINT #2, account(a).aType
-        PRINT #2, account(a).desc
-    NEXT a
-    
+    PRINT #2, ColorPref
+
+    FOR A = 1 TO 18
+        PRINT #2, account(A).Title
+        PRINT #2, account(A).AType
+        PRINT #2, account(A).Desc
+    NEXT A
+
     CLOSE #2
 
 END SUB
 
+'Call the assembly program to scroll the screen down
 SUB ScrollDown
 
     DEF SEG = VARSEG(ScrollDownAsm(1))
@@ -1219,6 +1286,7 @@ SUB ScrollDown
 
 END SUB
 
+'Scroll the screen down by calling the assembly language program
 SUB ScrollUp
 
     DEF SEG = VARSEG(ScrollUpAsm(1))
@@ -1227,111 +1295,114 @@ SUB ScrollUp
 
 END SUB
 
+'Nifty routing that rotates '$' and waits for a keypress
 SUB Sparkle
 
-    a$ = "$    $    $    $    $    $    $    $    $    $    $    $    $    $    $    $    $    "
+    A$ = "$    $    $    $    $    $    $    $    $    $    $    $    $    $    $    $    $    "
 
     WHILE INKEY$ = ""
-        FOR a = 1 TO 5
+        FOR A = 1 TO 5
             LOCATE 1, 1
-            PRINT MID$(a$, a, 80);
+            PRINT MID$(A$, A, 80);
             LOCATE 20, 1
-            PRINT MID$(a$, 6 - a, 80);
+            PRINT MID$(A$, 6 - A, 80);
 
-            FOR b = 2 TO 19
-                c = (a + b) MOD 5
+            FOR B = 2 TO 19
+                c = (A + B) MOD 5
                 IF c = 1 THEN
-                    LOCATE b, 80
+                    LOCATE B, 80
                     PRINT "$";
-                    LOCATE 21 - b, 1
+                    LOCATE 21 - B, 1
                     PRINT "$";
                 ELSE
-                    LOCATE b, 80
+                    LOCATE B, 80
                     PRINT " ";
-                    LOCATE 21 - b, 1
+                    LOCATE 21 - B, 1
                     PRINT " ";
                 END IF
-            NEXT b
-        NEXT a
+            NEXT B
+        NEXT A
     WEND
 
 END SUB
 
-SUB TransactionSummary (item)
+'Print transaction summary to line printer
+SUB TransactionSummary (Item)
 
-    fancyCls colors(2, monitorType), colors(1, monitorType)
-    printHelpLine ""
-    COLOR colors(7, monitorType), colors(4, monitorType)
-    box 8, 20, 14, 62
-    center 10, "Prepare printer for Report!"
-    center 12, "Hit <Enter> to print, or <Esc> to abort"
+    FancyCls Colors(2, ColorPref), Colors(1, ColorPref)
+    PrintHelpLine ""
+    COLOR Colors(7, ColorPref), Colors(4, ColorPref)
+    Box 8, 20, 14, 62
+    Center 10, "Prepare printer for Report!"
+    Center 12, "Press <Enter> to print, or <Esc> to abort"
 
-    DO: kbd$ = INKEY$: LOOP WHILE kbd$ <> CHR$(13) AND kbd$ <> CHR$(27)
+    DO: Kbd$ = INKEY$: LOOP WHILE Kbd$ <> CHR$(13) AND Kbd$ <> CHR$(27)
 
-    IF kbd$ = CHR$(13) THEN
+    IF Kbd$ = CHR$(13) THEN
         CLS
-        PRINT "THIS IS A TEMPORARY PRINT ROUTINE"
-        PRINT : PRINT : PRINT : PRINT : PRINT : PRINT
-        lcenter "T H E   M O N E Y   M A N A G E R"
-        PRINT
-        lcenter "TRANSACTION SUMMARY -- " + DATE$
-        PRINT : PRINT
-        lcenter Trim$(account(item).title)
-        PRINT
+
+        LPRINT : LPRINT : LPRINT : LPRINT : LPRINT : LPRINT
+        Lcenter "T H E   M O N E Y   M A N A G E R"
+        LPRINT
+        Lcenter "TRANSACTION SUMMARY -- " + DATE$
+        LPRINT : LPRINT
+        Lcenter Trim$(account(Item).Title)
+        LPRINT
         u5$ = "--------|-------|------------------------------|---------|---------|----------"
-        PRINT u5$
-        PRINT "  Date  | Ref#  |Description                   |Increase |Decrease | Balance  "
-        PRINT u5$
+        LPRINT u5$
+        LPRINT "  Date  | Ref#  |Description                   |Increase |Decrease | Balance  "
+        LPRINT u5$
         u0$ = "\      \|\     \|\                            \|"
         u2$ = "##,###.##"
         u3$ = "###,###.##"
         u4$ = "         "
 
-        file$ = "money." + Cvit$(item)
-        OPEN file$ FOR RANDOM AS #1 LEN = 84
-        FIELD #1, 8 AS ioDate$, 10 AS ioRef$, 50 AS ioDesc$, 8 AS ioFig1$, 8 AS ioFig2$
-        FIELD #1, 11 AS valid$, 5 AS ioMaxRecord$, 8 AS ioBalance$
+        File$ = "money." + Cvit$(Item)
+        OPEN File$ FOR RANDOM AS #1 LEN = 84
+        FIELD #1, 8 AS IoDate$, 10 AS IoRef$, 50 AS IoDesc$, 8 AS IoFig1$, 8 AS IoFig2$
+        FIELD #1, 11 AS valid$, 5 AS IoMaxRecord$, 8 AS IoBalance$
         GET #1, 1
         IF valid$ = "THISISVALID" THEN
-            balance# = 0
-            maxRecord = VAL(ioMaxRecord$)
-            currRecord = 1
-            WHILE currRecord <= maxRecord
+            Balance# = 0
+            MaxRecord = VAL(IoMaxRecord$)
+            CurrRecord = 1
+            WHILE CurrRecord <= MaxRecord
 
-                GET #1, currRecord + 1
-                fig1# = CVD(ioFig1$)
-                fig2# = CVD(ioFig2$)
+                GET #1, CurrRecord + 1
+                Fig1# = CVD(IoFig1$)
+                Fig2# = CVD(IoFig2$)
 
-                PRINT USING u0$; ioDate$; ioRef$; ioDesc$;
-                IF fig2# = 0 THEN
-                    balance# = balance# + fig1#
-                    PRINT USING u2$ + "|" + u4$ + "|" + u3$; fig1#; balance#
+                LPRINT USING u0$; IoDate$; IoRef$; IoDesc$;
+                IF Fig2# = 0 THEN
+                    Balance# = Balance# + Fig1#
+                    LPRINT USING u2$ + "|" + u4$ + "|" + u3$; Fig1#; Balance#
                 ELSE
-                    balance# = balance# - fig2#
-                    PRINT USING u4$ + "|" + u2$ + "|" + u3$; fig2#; balance#
+                    Balance# = Balance# - Fig2#
+                    LPRINT USING u4$ + "|" + u2$ + "|" + u3$; Fig2#; Balance#
                 END IF
-                currRecord = currRecord + 1
+                CurrRecord = CurrRecord + 1
             WEND
-            PRINT u5$
+            LPRINT u5$
         END IF
         CLOSE
     END IF
 END SUB
 
-FUNCTION Trim$ (x$)
+'Remove null and spaces from the end of a string.
+FUNCTION Trim$ (X$)
 
-    IF x$ = "" THEN
+    IF X$ = "" THEN
         Trim$ = ""
     ELSE
         lastChar = 0
-        FOR a = 1 TO LEN(x$)
-            y$ = MID$(x$, a, 1)
+        FOR A = 1 TO LEN(X$)
+            y$ = MID$(X$, A, 1)
             IF y$ <> CHR$(0) AND y$ <> " " THEN
-                lastChar = a
+                lastChar = A
             END IF
-        NEXT a
-        Trim$ = LEFT$(x$, lastChar)
+        NEXT A
+        Trim$ = LEFT$(X$, lastChar)
     END IF
-    
+
 END FUNCTION
 

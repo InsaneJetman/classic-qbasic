@@ -1,25 +1,13 @@
-'for faster play
-DEFINT A-Z
-
-'sub declarations
-DECLARE SUB SpacePause (text$)
-DECLARE SUB PrintScore (numPlayers%, score1%, score2%, lives1%, lives2%)
-DECLARE SUB Intro ()
-DECLARE SUB GetInputs (numPlayers, speed)
-DECLARE SUB DrawScreen ()
-DECLARE SUB PlayNibbles (numPlayers, speed)
-DECLARE SUB Set (row, col, acolor)
-DECLARE SUB Center (row, text$)
-DECLARE SUB DoIntro ()
-DECLARE SUB Initialize ()
-DECLARE SUB SparklePause ()
-DECLARE FUNCTION StillWantsToPlay ()
-DECLARE FUNCTION PointIsThere (row, col, backColor)
+' NIBBLES   co-written by Mike Warning
 
 'define constants
 CONST TRUE = -1
 CONST FALSE = NOT TRUE
 CONST MAXSNAKELENGTH = 1000
+
+CONST STARTOVER = 1             ' Parameters to 'Level' SUB
+CONST SAMELEVEL = 2
+CONST NEXTLEVEL = 3
 
 'define types
 TYPE snakeBody
@@ -28,7 +16,7 @@ TYPE snakeBody
 END TYPE
 
 'the type defines the player's snake
-TYPE snakeType
+TYPE snaketype
     head      AS INTEGER
     length    AS INTEGER
     row       AS INTEGER
@@ -57,17 +45,40 @@ TYPE arenaType
     sister      AS INTEGER        'Each char has 2 points in it.  .SISTER is
 END TYPE                          '-1 if sister point is above, +1 if below
 
+'for faster play
+DEFINT A-Z
+
+'sub declarations
+DECLARE SUB SpacePause (text$)
+DECLARE SUB PrintScore (numPlayers%, score1%, score2%, lives1%, lives2%)
+DECLARE SUB Intro ()
+DECLARE SUB GetInputs (numPlayers, speed, diff$)
+DECLARE SUB DrawScreen ()
+DECLARE SUB PlayNibbles (numPlayers, speed, diff$)
+DECLARE SUB Set (row, col, acolor)
+DECLARE SUB Center (row, text$)
+DECLARE SUB DoIntro ()
+DECLARE SUB Initialize ()
+DECLARE SUB SparklePause ()
+DECLARE FUNCTION StillWantsToPlay ()
+DECLARE FUNCTION PointIsThere (row, col, backColor)
+DECLARE SUB Level (WhatToDO, sammy() AS snaketype)
+DECLARE SUB InitColors ()
+DECLARE SUB EraseSnake (snake() AS ANY, snakeBod() AS ANY, snakeNum%)
+
 'Define global arrays
 DIM SHARED arena(1 TO 50, 1 TO 80) AS arenaType
 
-
+    RANDOMIZE TIMER
+    
     Intro
-    GetInputs numPlayers, speed
+    GetInputs numPlayers, speed, diff$
     DrawScreen
 
     DO
-      PlayNibbles numPlayers, speed
+      PlayNibbles numPlayers, speed, diff$
     LOOP WHILE StillWantsToPlay
+END
 
 'Takes in a row and a string, and centers the string on that row
 SUB Center (row, text$)
@@ -87,30 +98,29 @@ SUB DrawScreen
     'Print title & message
     Center 1, "Nibbles!"
     Center 11, "Initializing Playing Field..."
-
+    
     'Initialize arena array
     FOR row = 1 TO 50
         FOR col = 1 TO 80
-            arena(row, col).acolor = 1
             arena(row, col).realRow = INT((row + 1) / 2)
             arena(row, col).sister = (row MOD 2) * 2 - 1
         NEXT col
     NEXT row
-
-    'Set (turn on) pixels for screen border
-    FOR col = 1 TO 80
-        Set 3, col, 12
-        Set 50, col, 12
-    NEXT col
-
-    FOR row = 4 TO 49
-        Set row, 1, 12
-        Set row, 80, 12
-    NEXT row
-
+    
 END SUB
 
-SUB GetInputs (numPlayers, speed)
+SUB EraseSnake (snake() AS snaketype, snakeBod() AS snakeBody, snakeNum)
+
+    FOR c = 0 TO 9
+        FOR b = snake(snakeNum).length - c TO 0 STEP -10
+            tail = (snake(snakeNum).head + MAXSNAKELENGTH - b) MOD MAXSNAKELENGTH
+            Set snakeBod(tail, snakeNum).row, snakeBod(tail, snakeNum).col, 1
+        NEXT b
+    NEXT c
+    
+END SUB
+
+SUB GetInputs (numPlayers, speed, diff$)
 
     'Get first question
     COLOR 15, 1
@@ -122,7 +132,7 @@ SUB GetInputs (numPlayers, speed)
 
 
     'Get Second Question
-    LOCATE 12, 5: PRINT "Enter Skill level between 1 and 100. -->"
+    LOCATE 12, 5: PRINT "Enter Speed level between 1 and 100. -->"
     COLOR 14
     PRINT
     PRINT "          1   = Novice"
@@ -137,8 +147,51 @@ SUB GetInputs (numPlayers, speed)
         LOCATE 12, 44
         INPUT speed
     LOOP UNTIL speed >= 1 AND speed <= 100
-    
+  
     speed = (100 - speed) * 2 + 1
+
+    LOCATE 20, 5: PRINT "Enter difficulty level -->"
+    COLOR 14
+    PRINT
+    PRINT "          A = Amateur"
+    PRINT "          P = Pro    (Speed increases during play)"
+
+    COLOR 15
+    DO
+        LOCATE 20, 30
+        PRINT SPACE$(40);
+        LOCATE 20, 30
+        INPUT diff$
+        diff$ = UCASE$(diff$)
+    LOOP UNTIL diff$ = "A" OR diff$ = "P"
+
+    startTime# = TIMER                          ' Calculate speed of system
+    FOR i# = 1 TO 1000: NEXT i#                 ' and do some compensation
+    stopTime# = TIMER
+    speed = speed * .5 / (stopTime# - startTime#)
+
+END SUB
+
+SUB InitColors
+    
+    FOR row = 1 TO 50
+        FOR col = 1 TO 80
+            arena(row, col).acolor = 1
+        NEXT col
+    NEXT row
+   
+    CLS
+    'Set (turn on) pixels for screen border
+    FOR col = 1 TO 80
+        Set 3, col, 12
+        Set 50, col, 12
+    NEXT col
+
+    FOR row = 4 TO 49
+        Set row, 1, 12
+        Set row, 80, 12
+    NEXT row
+
 END SUB
 
 SUB Intro
@@ -156,18 +209,151 @@ SUB Intro
     Center 11, "This game uses the following keys:"
     Center 13, "  Left Player:  Up,Left,Right,Dowm  = W,A,S,D   "
     Center 14, " Right Player:  Up,Left,Right,Dowm  = Arrow Keys"
-
+    Center 16, "Press 'P' at any time to pause the game"
     Center 25, "Push Any Key To Continue"
     COLOR 9
     SparklePause
 
 END SUB
 
-SUB PlayNibbles (numPlayers, speed)
+SUB Level (WhatToDO, sammy() AS snaketype) STATIC
+    
+    SELECT CASE (WhatToDO)
+    CASE STARTOVER
+        curLevel = 1
+    CASE NEXTLEVEL
+        curLevel = curLevel + 1
+    END SELECT
+
+    sammy(1).head = 1                       'Initialize Snakes
+    sammy(1).length = 2
+    sammy(1).alive = TRUE
+    sammy(2).head = 1
+    sammy(2).length = 2
+    sammy(2).alive = TRUE
+
+    InitColors
+   
+    SELECT CASE curLevel
+    CASE 1
+        Set 25, 40, 12
+        sammy(1).row = 25: sammy(2).row = 25
+        sammy(1).col = 50: sammy(2).col = 30
+        sammy(1).direction = 4: sammy(2).direction = 3
+
+    CASE 2
+        FOR i = 20 TO 60
+            Set 25, i, 12
+        NEXT i
+        sammy(1).row = 7: sammy(2).row = 43
+        sammy(1).col = 60: sammy(2).col = 20
+        sammy(1).direction = 3: sammy(2).direction = 4
+
+    CASE 3
+        FOR i = 10 TO 40
+            Set i, 20, 12
+            Set i, 60, 12
+        NEXT i
+        sammy(1).row = 25: sammy(2).row = 25
+        sammy(1).col = 50: sammy(2).col = 30
+        sammy(1).direction = 1: sammy(2).direction = 2
+
+    CASE 4
+        FOR i = 4 TO 30
+            Set i, 20, 12
+            Set 53 - i, 60, 12
+        NEXT i
+        FOR i = 2 TO 40
+            Set 38, i, 12
+            Set 15, 81 - i, 12
+        NEXT i
+        sammy(1).row = 7: sammy(2).row = 43
+        sammy(1).col = 60: sammy(2).col = 20
+        sammy(1).direction = 3: sammy(2).direction = 4
+   
+    CASE 5
+        FOR i = 13 TO 39
+            Set i, 21, 12
+            Set i, 59, 12
+        NEXT i
+        FOR i = 23 TO 57
+            Set 11, i, 12
+            Set 41, i, 12
+        NEXT i
+        sammy(1).row = 25: sammy(2).row = 25
+        sammy(1).col = 50: sammy(2).col = 30
+        sammy(1).direction = 1: sammy(2).direction = 2
+
+    CASE 6
+        FOR i = 4 TO 49
+            IF i > 30 OR i < 23 THEN
+                Set i, 10, 12
+                Set i, 20, 12
+                Set i, 30, 12
+                Set i, 40, 12
+                Set i, 50, 12
+                Set i, 60, 12
+                Set i, 70, 12
+            END IF
+        NEXT i
+        sammy(1).row = 7: sammy(2).row = 43
+        sammy(1).col = 65: sammy(2).col = 15
+        sammy(1).direction = 2: sammy(2).direction = 1
+
+    CASE 7
+        FOR i = 4 TO 49 STEP 2
+            Set i, 40, 12
+        NEXT i
+        sammy(1).row = 7: sammy(2).row = 43
+        sammy(1).col = 65: sammy(2).col = 15
+        sammy(1).direction = 2: sammy(2).direction = 1
+
+    CASE 8
+        FOR i = 4 TO 40
+            Set i, 10, 12
+            Set 53 - i, 20, 12
+            Set i, 30, 12
+            Set 53 - i, 40, 12
+            Set i, 50, 12
+            Set 53 - i, 60, 12
+            Set i, 70, 12
+        NEXT i
+        sammy(1).row = 7: sammy(2).row = 43
+        sammy(1).col = 65: sammy(2).col = 15
+        sammy(1).direction = 2: sammy(2).direction = 1
+
+    CASE 9
+        FOR i = 6 TO 47
+            Set i, i, 12
+            Set i, i + 28, 12
+        NEXT i
+        sammy(1).row = 40: sammy(2).row = 15
+        sammy(1).col = 75: sammy(2).col = 5
+        sammy(1).direction = 1: sammy(2).direction = 2
+   
+    CASE ELSE
+        FOR i = 4 TO 49 STEP 2
+            Set i, 10, 12
+            Set i + 1, 20, 12
+            Set i, 30, 12
+            Set i + 1, 40, 12
+            Set i, 50, 12
+            Set i + 1, 60, 12
+            Set i, 70, 12
+        NEXT i
+        sammy(1).row = 7: sammy(2).row = 43
+        sammy(1).col = 65: sammy(2).col = 15
+        sammy(1).direction = 2: sammy(2).direction = 1
+
+    END SELECT
+
+END SUB
+
+SUB PlayNibbles (numPlayers, speed, diff$)
 
     'Initialize Snakes
     DIM sammyBody(MAXSNAKELENGTH - 1, 1 TO 2) AS snakeBody
-    DIM sammy(1 TO 2) AS snakeType
+    DIM sammy(1 TO 2) AS snaketype
     sammy(1).lives = 5
     sammy(1).score = 0
     sammy(1).scolor = 14
@@ -175,33 +361,23 @@ SUB PlayNibbles (numPlayers, speed)
     sammy(2).score = 0
     sammy(2).scolor = 13
                  
+    Level STARTOVER, sammy()
+    startRow1 = sammy(1).row: startCol1 = sammy(1).col
+    startRow2 = sammy(2).row: startCol2 = sammy(2).col
+
+    curSpeed = speed
 
     'play Nibbles until finished
 
     SpacePause "     Push Space to Start!    "
     gameOver = FALSE
     DO
-        sammy(1).head = 1                       'Initialize Snakes
-        sammy(1).length = 2
-        sammy(1).row = 25
-        sammy(1).col = 50
-        sammy(1).direction = 4
-        sammy(1).alive = TRUE
-        
-        IF numPlayers = 2 THEN
-            sammy(2).head = 1
-            sammy(2).length = 2
-            sammy(2).row = 25
-            sammy(2).col = 30
-            sammy(2).direction = 3
-            sammy(2).alive = TRUE
-        ELSE
+        IF numPlayers = 1 THEN
             sammy(2).row = 0
         END IF
 
-        number = 0          'Current number that snakes are trying to run into
-        numberRow = 5       'Current number's row & col
-        numberCol = 5
+        number = 1          'Current number that snakes are trying to run into
+        nonum = TRUE        'nonum = TRUE if a number is not on the screen
 
         playerDied = FALSE
         PrintScore numPlayers, sammy(1).score, sammy(2).score, sammy(1).lives, sammy(2).lives
@@ -209,36 +385,22 @@ SUB PlayNibbles (numPlayers, speed)
 
         DO
             'Print number if no number exists
-            IF number = 0 THEN
+            IF nonum = TRUE THEN
                 DO
                     numberRow = INT(RND(1) * 47 + 3)
-                    numberCol = INT(RND(1) * 78 + 2)
-                    sisterRow = numberRow + arena(numberRow, numberCol).sister
-                LOOP UNTIL NOT PointIsThere(numberRow, numberCol, 1) AND NOT PointIsThere(sisterRow, numberCol, 1)
-                numberRow = arena(numberRow, numberCol).realRow
-                number = 9
+                    NumberCol = INT(RND(1) * 78 + 2)
+                    sisterRow = numberRow + arena(numberRow, NumberCol).sister
+                LOOP UNTIL NOT PointIsThere(numberRow, NumberCol, 1) AND NOT PointIsThere(sisterRow, NumberCol, 1)
+                numberRow = arena(numberRow, NumberCol).realRow
+                nonum = FALSE
                 COLOR 14, 1
-                LOCATE numberRow, numberCol
+                LOCATE numberRow, NumberCol
                 PRINT RIGHT$(STR$(number), 1);
                 count = 0
             END IF
 
-            'Count number down every 40 clicks
-            count = (count + 1) MOD 40
-            IF count = 0 THEN
-                PLAY "MBO0L32>>G"
-                number = number - 1
-                COLOR 14, 1
-                LOCATE numberRow, numberCol
-                IF number = 0 THEN
-                    PRINT " "
-                ELSE
-                    PRINT RIGHT$(STR$(number), 1);
-                END IF
-            END IF
-
             'Delay game
-            FOR a# = 1 TO speed: NEXT a#
+            FOR a# = 1 TO curSpeed:  NEXT a#
 
             'Get keyboard input & Change direction accordingly
             kbd$ = INKEY$
@@ -251,6 +413,7 @@ SUB PlayNibbles (numPlayers, speed)
                 CASE CHR$(0) + "P": IF sammy(1).direction <> 1 THEN sammy(1).direction = 2
                 CASE CHR$(0) + "K": IF sammy(1).direction <> 4 THEN sammy(1).direction = 3
                 CASE CHR$(0) + "M": IF sammy(1).direction <> 3 THEN sammy(1).direction = 4
+                CASE "p", "P": SpacePause " Game Paused ... Push Space  "
                 CASE ELSE
             END SELECT
 
@@ -264,14 +427,26 @@ SUB PlayNibbles (numPlayers, speed)
                 END SELECT
 
                 'If snake hits number, respond accordingly
-                IF numberRow = INT((sammy(a).row + 1) / 2) AND numberCol = sammy(a).col THEN
+                IF numberRow = INT((sammy(a).row + 1) / 2) AND NumberCol = sammy(a).col THEN
                     PLAY "MBO0L16>CCCE"
                     IF sammy(a).length < (MAXSNAKELENGTH - 30) THEN
                         sammy(a).length = sammy(a).length + number * 4
                     END IF
                     sammy(a).score = sammy(a).score + number
                     PrintScore numPlayers, sammy(1).score, sammy(2).score, sammy(1).lives, sammy(2).lives
-                    number = 0
+                    number = number + 1
+                    IF number = 10 THEN
+                        EraseSnake sammy(), sammyBody(), 1
+                        EraseSnake sammy(), sammyBody(), 2
+                        LOCATE numberRow, NumberCol: PRINT " "
+                        Level NEXTLEVEL, sammy()
+                        PrintScore numPlayers, sammy(1).score, sammy(2).score, sammy(1).lives, sammy(2).lives
+                        IF numPlayers = 1 THEN sammy(2).row = 0
+                        number = 1
+                        IF diff$ = "P" THEN speed = speed - 10: curSpeed = speed
+                    END IF
+                    nonum = TRUE
+                    IF curSpeed < 1 THEN curSpeed = 1
                 END IF
             NEXT a
 
@@ -280,7 +455,7 @@ SUB PlayNibbles (numPlayers, speed)
                 IF PointIsThere(sammy(a).row, sammy(a).col, 1) OR (sammy(1).row = sammy(2).row AND sammy(1).col = sammy(2).col) THEN
                     PLAY "MBO0L32EFGEFDC"
                     COLOR 1, 1
-                    LOCATE numberRow, numberCol
+                    LOCATE numberRow, NumberCol
                     PRINT " "
                    
                     playerDied = TRUE
@@ -301,16 +476,13 @@ SUB PlayNibbles (numPlayers, speed)
 
         LOOP UNTIL playerDied
 
+        curSpeed = speed                ' reset speed to initial value
+       
         FOR a = 1 TO numPlayers
+            EraseSnake sammy(), sammyBody(), a
+
             'If dead, then erase snake in really cool way
             IF sammy(a).alive = FALSE THEN
-                FOR c = 0 TO 9
-                    FOR b = sammy(a).length - c TO 0 STEP -10
-                        tail = (sammy(a).head + MAXSNAKELENGTH - b) MOD MAXSNAKELENGTH
-                        Set sammyBody(tail, a).row, sammyBody(tail, a).col, 1
-                    NEXT b
-                NEXT c
-
                 'Update score
                 sammy(a).score = sammy(a).score - 10
                 PrintScore numPlayers, sammy(1).score, sammy(2).score, sammy(1).lives, sammy(2).lives
@@ -323,16 +495,8 @@ SUB PlayNibbles (numPlayers, speed)
             END IF
         NEXT a
 
-        'Erase snake that lived (if any)
-        FOR a = 1 TO numPlayers
-            IF sammy(a).alive THEN
-                FOR b = sammy(a).length + 1 TO 0 STEP -1
-                    tail = (sammy(a).head + MAXSNAKELENGTH - b) MOD MAXSNAKELENGTH
-                    Set sammyBody(tail, a).row, sammyBody(tail, a).col, 1
-                NEXT b
-            END IF
-        NEXT a
-
+        Level SAMELEVEL, sammy()
+     
     'Play next round, until either of snake's lives have run out.
     LOOP UNTIL sammy(1).lives = 0 OR sammy(2).lives = 0
 
@@ -383,7 +547,7 @@ SUB Set (row, col, acolor)
             IF topFlag THEN                         'Since you cannot have
                 IF acolor > 7 THEN                  'bright backgrounds
                     COLOR acolor, sisterColor       'determine best combo
-                    PRINT CHR$(223);                'to use. 
+                    PRINT CHR$(223);                'to use.
                 ELSE
                     COLOR sisterColor, acolor
                     PRINT CHR$(220);
@@ -409,9 +573,13 @@ SUB SpacePause (text$)
     WHILE INKEY$ <> "": WEND
     WHILE INKEY$ <> " ": WEND
     COLOR 15, 1
-    Center 11, "                                 "
-    Center 12, "                                 "
-    Center 13, "                                 "
+
+    FOR i = 21 TO 26            ' Restore the screen background
+        FOR j = 24 TO 56
+            Set i, j, arena(i, j).acolor
+        NEXT j
+    NEXT i
+
 END SUB
 
 SUB SparklePause

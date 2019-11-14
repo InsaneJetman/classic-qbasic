@@ -1,558 +1,1119 @@
+'                         Q B a s i c   G o r r i l l a s
+'
+'                   Copyright (C) Microsoft Corporation 1990
+
+'Speed of this program is determined by the constant SPEEDCONST.
+'If the program is too slow or too fast adjust this line:
+'CONST SPEEDCONST = 400
+'The larger the number the faster the game will go.
+
 DEFINT A-Z
+
+'Sub Declarations
+DECLARE FUNCTION Scl (n!)
+DECLARE FUNCTION GetNum# (Row, Col)
+DECLARE SUB DoSun (Mouth)
+DECLARE SUB SetScreen ()
 DECLARE SUB EndGame ()
-DECLARE SUB Center (row%, text$)
+DECLARE SUB Center (Row, Text$)
 DECLARE SUB Intro ()
 DECLARE SUB SparklePause ()
-DECLARE SUB GetInputs (player1$, player2$, numGames%, gravity#)
-DECLARE SUB PlayGame (player1$, player2$, numGames%, gravity#)
-DECLARE SUB CyclePalette ()
+DECLARE SUB GetInputs (Player1$, Player2$, NumGames)
+DECLARE SUB PlayGame (Player1$, Player2$, NumGames)
 DECLARE SUB DoExplosion (x#, y#)
-DECLARE SUB MakeBattleField (TerrainHeight%())
-DECLARE SUB PlaceCastles (XPos%(), YPos%(), TerrainHeight%())
-DECLARE SUB UpdateScores (Record%(), PlayerNum%, Results%)
-DECLARE FUNCTION DoShot% (PlayerNum%, XPos%, YPos%)
-DECLARE FUNCTION ExplodeCastle% (x#, y#)
-DECLARE FUNCTION GetNum# (row, col)
-DECLARE FUNCTION PlotShot% (StartX%, StartY%, Angle#, Velocity%)
+DECLARE SUB MakeCityScape (BCoor() AS ANY)
+DECLARE SUB PlaceGorillas (BCoor() AS ANY)
+DECLARE SUB UpdateScores (Record(), PlayerNum, Results)
+DECLARE FUNCTION DoShot (PlayerNum, x, y)
+DECLARE FUNCTION ExplodeGorilla (x#, y#)
+DECLARE FUNCTION Getn# (Row, Col)
+DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
+DECLARE SUB DrawGorilla (x, y, arms)
+DECLARE SUB GorillaIntro (Player1$, Player2$)
+DECLARE SUB Rest (t#)
+DECLARE SUB VictoryDance (Player)
+DECLARE SUB ClearGorillas ()
+DECLARE SUB DoBan (x, y)
+DECLARE SUB DrawBan (xc#, yc#, r, bc)
+DECLARE FUNCTION CalcDelay! ()
 
+'Make all arrays Dynamic
+'$DYNAMIC
+
+'User-Defined TYPEs
+TYPE XYPoint
+  XCoor AS INTEGER
+  YCoor AS INTEGER
+END TYPE
+
+'Constants
+CONST SPEEDCONST = 400
 CONST TRUE = -1
 CONST FALSE = NOT TRUE
-CONST SHOTSELF = 1
-CONST BACKGROUNDCOLOR = 0
-CONST TERRAINCOLOR = 1
-CONST EXPLOSIONCOLOR = 2
-CONST OBJECTCOLOR = 3
+CONST HITSELF = 1
+CONST BACKATTR = 0
+CONST OBJECTCOLOR = 1
+CONST WINDOWCOLOR = 14
+CONST SUNATTR = 3
+CONST SUNHAPPY = FALSE
+CONST SUNSHOCK = TRUE
+CONST RIGHTUP = 1
+CONST LEFTUP = 2
+CONST ARMSDOWN = 3
 
-DIM SHARED CastleX(1 TO 2)
-DIM SHARED CastleY(1 TO 2)
+'Global Variables
+DIM SHARED GorillaX(1 TO 2)  'Location of the two gorillas
+DIM SHARED GorillaY(1 TO 2)
+DIM SHARED LastBuilding
 
-DIM SHARED PI#
-DIM SHARED CastlePic&(1 TO 40)
-DIM SHARED shot&(1 TO 10)
+DIM SHARED pi#
+DIM SHARED LBan&(x), RBan&(x), UBan&(x), DBan&(x) 'Graphical picture of banana
+DIM SHARED GorD&(120)        'Graphical picture of Gorilla arms down
+DIM SHARED GorL&(120)        'Gorilla left arm raised
+DIM SHARED GorR&(120)        'Gorilla right arm raised
 
-DIM SHARED gravity#
+DIM SHARED Gravity#
 DIM SHARED Wind
 
-DIM SHARED ScreenHeight
-DIM SHARED ScreenWidth
-DIM SHARED mode
+'Screen Mode Variables
+DIM SHARED ScrHeight
+DIM SHARED ScrWidth
+DIM SHARED Mode
 DIM SHARED MaxCol
-DIM SHARED BaseCol
 
-    Intro
-    GetInputs name1$, name2$, numGames, gravity#
-    GOSUB InitializeVariables
-    PlayGame name1$, name2$, numGames, gravity#
-    EndGame
+'Screen Color Variables
+DIM SHARED ExplosionColor
+DIM SHARED SunColor
+DIM SHARED BackColor
+DIM SHARED SunHit
+
+DIM SHARED SunHt
+DIM SHARED GHeight
+DIM SHARED MachSpeed AS SINGLE
+
+DEF FnRan (x) = INT(RND(1) * x) + 1
+
+  GOSUB InitVars
+  Intro
+  GetInputs Name1$, Name2$, NumGames
+  GorillaIntro Name1$, Name2$
+  PlayGame Name1$, Name2$, NumGames
+  EndGame
 END
 
+CGABanana:
+  'BananaLeft
+  DATA 327686, -252645316, 60
+  'BananaDown
+  DATA 196618, -1057030081, 49344
+  'BananaUp
+  DATA 196618, -1056980800, 63
+  'BananaRight
+  DATA 327686,  1010580720, 240
 
+EGABanana:
+  'BananaLeft
+  DATA 458758,202116096,471604224,943208448,943208448,943208448,471604224,202116096,0
+  'BananaDown
+  DATA 262153, -2134835200, -2134802239, -2130771968, -2130738945,8323072, 8323199, 4063232, 4063294
+  'BananaUp
+  DATA 262153, 4063232, 4063294, 8323072, 8323199, -2130771968, -2130738945, -2134835200,-2134802239
+  'BananaRight
+  DATA 458758, -1061109760, -522133504, 1886416896, 1886416896, 1886416896,-522133504,-1061109760,0
 
+InitVars:
+  pi# = 4 * ATN(1#)
 
-CGAPic:
-    DATA 589840,-12301,-1,-62915521,-62915521,64575
+  'This is a clever way to pick the best graphics mode available
+  ON ERROR GOTO ScreenModeError
+  Mode = 9
+  SCREEN Mode
+  ON ERROR GOTO 0
+  MachSpeed = CalcDelay
 
-CGAShot:
-    DATA 196614,3210288&
+  IF Mode = 9 THEN
+    ScrWidth = 640
+    ScrHeight = 350
+    GHeight = 25
+    RESTORE EGABanana
+    REDIM LBan&(8), RBan&(8), UBan&(8), DBan&(8)
 
-EGAPic:
-    DATA 1048592,-806105101,0,-806105101,0,-1,0,-1,0,-1,0,-1,0,-62915521,0
-    DATA -62915521,0,-62915521,0,-62915521,0,-62915521,0,-62915521,0,-62915521
-    DATA  0,-62915521,0,-62915521,0,-62915521,0,0,0,-62915521,0,0,0
+    FOR i = 0 TO 8
+      READ LBan&(i)
+    NEXT i
 
-EGAShot:
-    DATA 196611,57568,57568,57568
+    FOR i = 0 TO 8
+      READ DBan&(i)
+    NEXT i
 
+    FOR i = 0 TO 8
+      READ UBan&(i)
+    NEXT i
 
+    FOR i = 0 TO 8
+      READ RBan&(i)
+    NEXT i
 
-InitializeVariables:
-    PI# = 4 * ATN(1#)
+    MaxCol = 80
+    SunHt = 39
+  ELSE
 
-    ON ERROR GOTO ScreenModeError
-    mode = 9
-    SCREEN mode
-    ON ERROR GOTO 0
-    
-    IF mode = 9 THEN
-        ScreenWidth = 640
-        ScreenHeight = 350
+    ScrWidth = 320
+    ScrHeight = 200
+    GHeight = 12
+    RESTORE CGABanana
+    REDIM LBan&(2), RBan&(2), UBan&(2), DBan&(2)
+    REDIM GorL&(20), GorD&(20), GorR&(20)
 
-        RESTORE EGAPic
-        FOR Counter = 1 TO 39
-            READ CastlePic&(Counter)
-        NEXT Counter
+    FOR i = 0 TO 2
+      READ LBan&(i)
+    NEXT i
+    FOR i = 0 TO 2
+      READ DBan&(i)
+    NEXT i
+    FOR i = 0 TO 2
+      READ UBan&(i)
+    NEXT i
+    FOR i = 0 TO 2
+      READ RBan&(i)
+    NEXT i
 
-        FOR Counter = 1 TO 4
-            READ shot&(Counter)
-        NEXT Counter
-
-        COLOR 3, 1
-        PALETTE TERRAINCOLOR, 2                     'Set color for ground
-        PALETTE EXPLOSIONCOLOR, 4                   'Explosion color
-        PALETTE OBJECTCOLOR, 12
-        BaseCol = 30
-        MaxCol = 80
-    ELSE
-        ScreenWidth = 320
-        ScreenHeight = 200
-        RESTORE CGAPic
-        FOR Counter = 1 TO 6
-            READ CastlePic&(Counter)
-        NEXT Counter
-        FOR Counter = 1 TO 2
-            READ shot&(Counter)
-        NEXT Counter
-        COLOR 3, 0
-        BaseCol = 10
-        MaxCol = 40
-    END IF
-
+    MachSpeed = MachSpeed * 1.3
+    MaxCol = 40
+    SunHt = 20
+  END IF
 RETURN
 
-
-
 ScreenModeError:
-    IF mode = 1 THEN
-        PRINT "Sorry, You must have CGA, EGA, or VGA graphics to play Castles"
-        END
-    ELSE
-        mode = 1
-        RESUME
-    END IF
+  IF Mode = 1 THEN
+    PRINT "Sorry, you must have CGA, EGA, or VGA graphics to play GORILLAS"
+    END
+  ELSE
+    Mode = 1
+    RESUME
+  END IF
 
-SUB Center (row, text$)
+REM $STATIC
+'CalcDelay: Checks speed of the machine.
+FUNCTION CalcDelay!
 
-    LOCATE row, 41 - LEN(text$) / 2
-    PRINT text$;
+  s! = TIMER
+  DO
+    i! = i! + 1
+  LOOP UNTIL TIMER - s! >= .5
+  CalcDelay! = i!
 
+END FUNCTION
+
+' Center:
+'   Centers and prints a text string on a given row
+' Parameters:
+'   Row - screen row number
+'   Text$ - text to be printed
+'
+SUB Center (Row, Text$)
+  Col = MaxCol \ 2
+  LOCATE Row, Col - (LEN(Text$) / 2 + .5)
+  PRINT Text$;
 END SUB
 
-SUB CyclePalette
-    IF mode = 9 THEN
-        PALETTE EXPLOSIONCOLOR, 38
-        PALETTE EXPLOSIONCOLOR, 44
-    ELSE
-        COLOR 12, EXPLOSIONCOLOR
-        COLOR 14, EXPLOSIONCOLOR
-        COLOR 3, EXPLOSIONCOLOR
-    END IF
-END SUB
-
+' DoExplosion:
+'   Produces explosion when a shot is fired
+' Parameters:
+'   X#, Y# - location of explosion
+'
 SUB DoExplosion (x#, y#)
-    PLAY "MBO0L32EFGEFDC"
-    Radius = ScreenHeight / 70
-    IF mode = 9 THEN Increment# = .5 ELSE Increment# = 1.2
-    FOR Counter# = 0 TO Radius STEP Increment#
-        CIRCLE (x#, y#), Counter#, EXPLOSIONCOLOR
-        CALL CyclePalette
-    NEXT Counter#
-    FOR Counter# = Radius TO 0 STEP (-1 * Increment#)
-        CIRCLE (x#, y#), Counter#, BACKGROUNDCOLOR
-        FOR Delay = 1 TO 100
-        NEXT Delay
-    NEXT Counter#
+
+  PLAY "MBO0L32EFGEFDC"
+  Radius = ScrHeight / 50
+  IF Mode = 9 THEN Inc# = .5 ELSE Inc# = .41
+  FOR c# = 0 TO Radius STEP Inc#
+    CIRCLE (x#, y#), c#, ExplosionColor
+  NEXT c#
+  FOR c# = Radius TO 0 STEP (-1 * Inc#)
+    CIRCLE (x#, y#), c#, BACKATTR
+    FOR i = 1 TO 100
+    NEXT i
+    Rest .005
+  NEXT c#
 END SUB
 
-FUNCTION DoShot (PlayerNum, XPos, YPos)
-    IF PlayerNum = 1 THEN
-        locateCol = 1
+' DoShot:
+'   Controls banana shots by accepting player input and plotting
+'   shot angle
+' Parameters:
+'   PlayerNum - Player
+'   x, y - Player's gorilla position
+'
+FUNCTION DoShot (PlayerNum, x, y)
+
+  'Input shot
+  IF PlayerNum = 1 THEN
+    LocateCol = 1
+  ELSE
+    IF Mode = 9 THEN
+      LocateCol = 66
     ELSE
-        IF mode = 9 THEN
-            locateCol = 66
-        ELSE
-            locateCol = 26
-        END IF
+      LocateCol = 26
     END IF
-    YShotPos = YPos - 3
-    LOCATE 2, locateCol
-    PRINT "Angle:";
-    Angle# = GetNum#(2, locateCol + 7)
+  END IF
 
-    LOCATE 3, locateCol
-    PRINT "Velocity:";
-    Velocity = GetNum#(3, locateCol + 10)
+  LOCATE 2, LocateCol
+  PRINT "Angle:";
+  Angle# = GetNum#(2, LocateCol + 7)
 
-    IF PlayerNum = 2 THEN Angle# = 180 - Angle#
+  LOCATE 3, LocateCol
+  PRINT "Velocity:";
+  Velocity = GetNum#(3, LocateCol + 10)
 
-    VIEW PRINT 1 TO 4
-    CLS 2
-    VIEW PRINT 1 TO 25
+  IF PlayerNum = 2 THEN
+    Angle# = 180 - Angle#
+  END IF
 
-    PlayerHit = PlotShot(XPos, YShotPos, Angle#, Velocity)
-    IF PlayerHit = PlayerNum THEN
-        DoShot = SHOTSELF
-    ELSEIF PlayerHit <> 0 THEN
-        DoShot = TRUE
-    ELSE
-        DoShot = FALSE
-    END IF
+  'Erase input
+  FOR i = 1 TO 4
+    LOCATE i, 1
+    PRINT SPACE$(30 \ (80 \ MaxCol));
+    LOCATE i, (50 \ (80 \ MaxCol))
+    PRINT SPACE$(30 \ (80 \ MaxCol));
+  NEXT
+
+  SunHit = FALSE
+  PlayerHit = PlotShot(x, y, Angle#, Velocity, PlayerNum)
+  IF PlayerHit = 0 THEN
+    DoShot = FALSE
+  ELSE
+    DoShot = TRUE
+    IF PlayerHit = PlayerNum THEN PlayerNum = 3 - PlayerNum
+    VictoryDance PlayerNum
+  END IF
+
 END FUNCTION
 
+' DoSun:
+'   Draws the sun at the top of the screen.
+' Parameters:
+'   Mouth - If TRUE draws "O" mouth else draws a smile mouth.
+'
+SUB DoSun (Mouth)
+
+  'set position of sun
+  x = ScrWidth \ 2: y = Scl(25)
+
+  'clear old sun
+  LINE (x - Scl(22), y - Scl(18))-(x + Scl(22), y + Scl(18)), BACKATTR, BF
+
+  'draw new sun:
+  'body
+  CIRCLE (x, y), Scl(12), SUNATTR
+  PAINT (x, y), SUNATTR
+
+  'rays
+  LINE (x - Scl(20), y)-(x + Scl(20), y), SUNATTR
+  LINE (x, y - Scl(15))-(x, y + Scl(15)), SUNATTR
+
+  LINE (x - Scl(15), y - Scl(10))-(x + Scl(15), y + Scl(10)), SUNATTR
+  LINE (x - Scl(15), y + Scl(10))-(x + Scl(15), y - Scl(10)), SUNATTR
+
+  LINE (x - Scl(8), y - Scl(13))-(x + Scl(8), y + Scl(13)), SUNATTR
+  LINE (x - Scl(8), y + Scl(13))-(x + Scl(8), y - Scl(13)), SUNATTR
+
+  LINE (x - Scl(18), y - Scl(5))-(x + Scl(18), y + Scl(5)), SUNATTR
+  LINE (x - Scl(18), y + Scl(5))-(x + Scl(18), y - Scl(5)), SUNATTR
+
+  'mouth
+  IF Mouth THEN  'draw "o" mouth
+    CIRCLE (x, y + Scl(5)), Scl(2.9), 0
+    PAINT (x, y + Scl(5)), 0, 0
+  ELSE           'draw smile
+    CIRCLE (x, y), Scl(8), 0, (210 * pi# / 180), (330 * pi# / 180)
+  END IF
+
+  'eyes
+  CIRCLE (x - 3, y - 2), 1, 0
+  CIRCLE (x + 3, y - 2), 1, 0
+  PSET (x - 3, y - 2), 0
+  PSET (x + 3, y - 2), 0
+
+END SUB
+
+'  DoBan:
+'     Draws the banana
+'  Parameters:
+'     xc# - Horizontal Coordinate
+'     yc# - Vertical Coordinate
+'     r - rotation position (0-3). (  \_/  ) /-\
+'     bc - if TRUE then DrawBan draws the banana ELSE it erases the banana.
+'
+SUB DrawBan (xc#, yc#, r, bc)
+
+SELECT CASE r
+  CASE 0
+    IF bc THEN PUT (xc#, yc#), LBan&, PSET ELSE PUT (xc#, yc#), LBan&, XOR
+  CASE 1
+    IF bc THEN PUT (xc#, yc#), UBan&, PSET ELSE PUT (xc#, yc#), UBan&, XOR
+  CASE 2
+    IF bc THEN PUT (xc#, yc#), DBan&, PSET ELSE PUT (xc#, yc#), DBan&, XOR
+  CASE 3
+    IF bc THEN PUT (xc#, yc#), RBan&, PSET ELSE PUT (xc#, yc#), RBan&, XOR
+END SELECT
+
+END SUB
+
+'  DrawGorilla:
+'     Draws the Gorilla in either CGA or EGA mode
+'     and saves the graphics data in an array.
+'  Parameters:
+'     x - x coordinate of gorilla
+'     y - y coordinate of the gorilla
+'     arms - either Left up, Right up, or both down
+'
+SUB DrawGorilla (x, y, arms)
+
+  DIM i AS SINGLE   ' Local index must be single precision
+
+  'draw head
+  LINE (x - Scl(4), y)-(x + Scl(2.9), y + Scl(6)), OBJECTCOLOR, BF
+  LINE (x - Scl(5), y + Scl(2))-(x + Scl(4), y + Scl(4)), OBJECTCOLOR, BF
+
+  'draw eyes/brow
+  LINE (x - Scl(3), y + Scl(2))-(x + Scl(2), y + Scl(2)), 0
+
+  'draw nose if ega
+  IF Mode = 9 THEN
+    FOR i = -2 TO -1
+      PSET (x + i, y + 4), 0
+      PSET (x + i + 3, y + 4), 0
+    NEXT i
+  END IF
+
+  'neck
+  LINE (x - Scl(3), y + Scl(7))-(x + Scl(2), y + Scl(7)), OBJECTCOLOR
+
+  'body
+  LINE (x - Scl(8), y + Scl(8))-(x + Scl(6.9), y + Scl(14)), OBJECTCOLOR, BF
+  LINE (x - Scl(6), y + Scl(15))-(x + Scl(4.9), y + Scl(20)), OBJECTCOLOR, BF
+
+  'legs
+  FOR i = 0 TO 4
+    CIRCLE (x + Scl(i), y + Scl(25)), Scl(10), OBJECTCOLOR, 3 * pi# / 4, 9 * pi# / 8
+    CIRCLE (x + Scl(-6) + Scl(i - .1), y + Scl(25)), Scl(10), OBJECTCOLOR, 15 * pi# / 8, pi# / 4
+  NEXT
+
+  'chest
+  CIRCLE (x - Scl(4.9), y + Scl(10)), Scl(4.9), 0, 3 * pi# / 2, 0
+  CIRCLE (x + Scl(4.9), y + Scl(10)), Scl(4.9), 0, pi#, 3 * pi# / 2
+
+  FOR i = -5 TO -1
+    SELECT CASE arms
+      CASE 1
+        'Right arm up
+        CIRCLE (x + Scl(i - .1), y + Scl(14)), Scl(9), OBJECTCOLOR, 3 * pi# / 4, 5 * pi# / 4
+        CIRCLE (x + Scl(4.9) + Scl(i), y + Scl(4)), Scl(9), OBJECTCOLOR, 7 * pi# / 4, pi# / 4
+        GET (x - Scl(15), y - Scl(1))-(x + Scl(14), y + Scl(28)), GorR&
+      CASE 2
+        'Left arm up
+        CIRCLE (x + Scl(i - .1), y + Scl(4)), Scl(9), OBJECTCOLOR, 3 * pi# / 4, 5 * pi# / 4
+        CIRCLE (x + Scl(4.9) + Scl(i), y + Scl(14)), Scl(9), OBJECTCOLOR, 7 * pi# / 4, pi# / 4
+        GET (x - Scl(15), y - Scl(1))-(x + Scl(14), y + Scl(28)), GorL&
+      CASE 3
+        'Both arms down
+        CIRCLE (x + Scl(i - .1), y + Scl(14)), Scl(9), OBJECTCOLOR, 3 * pi# / 4, 5 * pi# / 4
+        CIRCLE (x + Scl(4.9) + Scl(i), y + Scl(14)), Scl(9), OBJECTCOLOR, 7 * pi# / 4, pi# / 4
+        GET (x - Scl(15), y - Scl(1))-(x + Scl(14), y + Scl(28)), GorD&
+    END SELECT
+  NEXT i
+END SUB
+
+' EndGame:
+'   Cleans screen up after game is over
 SUB EndGame
-
-    SCREEN 0
-    WIDTH 80
-    COLOR 15, 0
-    CLS
-
+  SCREEN 0
+  WIDTH 80
+  COLOR 15, 0
+  CLS
 END SUB
 
-FUNCTION ExplodeCastle (x#, y#)
-    SHARED CastleX(), CastleY()
-    ScaleX# = ScreenWidth / 320
-    ScaleY# = ScreenHeight / 200
-    IF x# < ScreenWidth / 2 THEN PlayerHit = 1 ELSE PlayerHit = 2
-    PLAY "MBO0L16EFGEFDC"
-    FOR Blast = 1 TO 8 * ScaleX#
-        CIRCLE (CastleX(PlayerHit) + 3.5 * ScaleX#, CastleY(PlayerHit) + 7 * ScaleY#), Blast, EXPLOSIONCOLOR, , , -1.57
-        LINE (CastleX(PlayerHit) + 7 * ScaleX#, CastleY(PlayerHit) + 9 * ScaleY# - Blast)-(CastleX(PlayerHit), CastleY(PlayerHit) + 9 * ScaleY# - Blast), EXPLOSIONCOLOR
-        IF Blast MOD (10 - mode) < 3 THEN CALL CyclePalette
-    NEXT Blast
-    FOR Cloud = 1 TO 16 * ScaleX#
-        IF Cloud < (8 * ScaleX#) THEN CIRCLE (CastleX(PlayerHit) + 3.5 * ScaleX#, CastleY(PlayerHit) + 7 * ScaleY#), (8 * ScaleX# + 1) - Cloud, BACKGROUNDCOLOR, , , -1.57
-        CIRCLE (CastleX(PlayerHit) + 3.5 * ScaleX#, CastleY(PlayerHit)), Cloud, EXPLOSIONCOLOR, , , -1.57
-        IF Cloud MOD (10 - mode) < 3 THEN CALL CyclePalette
-    NEXT Cloud
-    FOR Cloud = 16 * ScaleX# TO 1 STEP -1
-        CIRCLE (CastleX(PlayerHit) + 3.5 * ScaleX#, CastleY(PlayerHit)), Cloud, BACKGROUNDCOLOR, , , -1.57
-        FOR Delay = 1 TO 200
-        NEXT Delay
-    NEXT Cloud
-    ExplodeCastle = PlayerHit
-END FUNCTION
+' ExplodeGorilla:
+'   Causes gorilla explosion when a direct hit occurs
+' Parameters:
+'   X#, Y# - shot location
+'
+FUNCTION ExplodeGorilla (x#, y#)
 
-SUB GetInputs (player1$, player2$, numGames, gravity#)
+  YAdj = Scl(12)
+  XAdj = Scl(5)
+  SclX# = ScrWidth / 320
+  SclY# = ScrHeight / 200
+  IF x# < ScrWidth / 2 THEN PlayerHit = 1 ELSE PlayerHit = 2
+  PLAY "MBO0L16EFGEFDC"
 
-    SCREEN 0
-    COLOR 14, 1
-    CLS
+  FOR i = 1 TO 8 * SclX#
+    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + 7 * SclY# + YAdj), i, ExplosionColor, , , -1.57
+    LINE (GorillaX(PlayerHit) + 7 * SclX#, GorillaY(PlayerHit) + 9 * SclY# - i)-(GorillaX(PlayerHit), GorillaY(PlayerHit) + 9 * SclY# - i), ExplosionColor
+  NEXT i
 
-    DO
-        LOCATE 9, 30
-        LINE INPUT "Name of Player 1 :"; player1$
-    LOOP UNTIL player1$ <> ""
+  FOR i = 1 TO 16 * SclX#
+    IF i < (8 * SclX#) THEN CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + 7 * SclY# + YAdj), (8 * SclX# + 1) - i, BACKATTR, , , -1.57
+    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + YAdj), i, i MOD 2 + 1, , , -1.57
+  NEXT i
 
-    DO
-        LOCATE 10, 30
-        LINE INPUT "Name of Player 2 :"; player2$
-    LOOP UNTIL player2$ <> ""
+  FOR i = 24 * SclX# TO 1 STEP -1
+    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + YAdj), i, BACKATTR, , , -1.57
+    FOR Count = 1 TO 200
+    NEXT
+  NEXT i
 
-    LOCATE 12, 26
-    INPUT "Play to how many points"; numGames
-
-    DO
-      LOCATE 14, 22
-      INPUT "Gravity in Meters/Sec (Earth = 9.8)"; gravity#
-    LOOP UNTIL gravity# > 0
-
-END SUB
-
-FUNCTION GetNum# (row, col)
-
-    result$ = ""
-    finished = FALSE
-
-    DO WHILE NOT finished
-
-        LOCATE row, col
-        PRINT result$; CHR$(95); " ";
-        
-        kbd$ = INKEY$
-        SELECT CASE kbd$
-            CASE "0" TO "9"
-                result$ = result$ + kbd$
-            CASE "."
-                IF INSTR(result$, ".") = 0 THEN
-                    result$ = result$ + kbd$
-                END IF
-            CASE CHR$(13)
-                finished = TRUE
-            CASE CHR$(8)
-                IF LEN(result$) > 0 THEN
-                    result$ = LEFT$(result$, LEN(result$) - 1)
-                END IF
-            CASE ELSE
-                IF LEN(kbd$) > 0 THEN
-                    BEEP
-                END IF
-        END SELECT
-    LOOP
-
-    LOCATE row, col
-    PRINT result$; " ";
-
-    GetNum# = VAL(result$)
+  ExplodeGorilla = PlayerHit
 
 END FUNCTION
 
-SUB Intro
+' GetInputs:
+'   Gets user inputs at beginning of game
+' Parameters:
+'   Player1$, Player2$ - player names
+'   NumGames - number of games to play
+'
+SUB GetInputs (Player1$, Player2$, NumGames)
 
-    SCREEN 0
-    WIDTH 80
-    COLOR 12, 1
-    CLS
-    Center 8, "Q B a s i c    C A T A P U L T"
-    COLOR 14
-    Center 10, "Your mission is to destroy your opponent's castle"
-    Center 11, "by varying the angle and power of your catapult"
-    Center 12, "taking into account wind speed, gravity and terrain."
-    Center 24, "Push Any Key To Continue"
-    COLOR 15
-    PLAY "T160O1L8CDEDCDL4ECC"
-    SparklePause
+  SCREEN 0
+  WIDTH 80
 
-END SUB
+  COLOR 14, 1
+  CLS
 
-SUB MakeBattleField (TerrainHeight())
-    IF mode = 9 THEN Increment = 2 ELSE Increment = 1
-    TerrainHeight(0) = ScreenHeight - (10 + INT((ScreenHeight / 3) * RND + 1))
-    FOR Counter = 1 TO ScreenWidth
-        Motion = INT(20 * RND + 1)
-        IF Counter < (ScreenWidth / 2) THEN OnFirstHalfScreen = TRUE ELSE OnFirstHalfScreen = FALSE
-        IF INT(4 * RND + 1) = 1 THEN ShouldCheckScreenPos = TRUE ELSE ShouldCheckScreenPos = FLASE
-        SELECT CASE Motion
-            CASE 1 TO 10
-                IF (ShouldCheckScreenPos AND OnFirstHalfScreen) THEN
-                    Trend = Trend - Increment
-                ELSEIF (ShouldCheckScreenPos AND (NOT OnFirstHalfScreen)) THEN
-                    Trend = Trend + Increment
-                ELSEIF Motion < 6 THEN
-                    Trend = Trend - Increment
-                ELSE
-                    Trend = Trend + Increment
-                END IF
-            CASE 11 TO 14
-                IF (ShouldCheckScreenPos AND OnFirstHalfScreen) THEN
-                    Trend = Trend - Increment * 2
-                ELSEIF (ShouldCheckScreenPos AND (NOT OnFirstHalfScreen)) THEN
-                    Trend = Trend + Increment * 2
-                ELSEIF Motion < 13 THEN
-                    Trend = Trend - Increment * 2
-                ELSE
-                    Trend = Trend + Increment * 2
-                END IF
-            CASE 15
-                Trend = 0
-            CASE 16
-                Trend = 1
-            CASE 17
-                Trend = -1
-            CASE ELSE
-        END SELECT
-        SELECT CASE Trend
-            CASE IS < -10
-                TerrainHeight(Counter) = TerrainHeight(Counter - 1) - 3
-            CASE IS < 0
-                TerrainHeight(Counter) = TerrainHeight(Counter - 1) - 1
-            CASE IS > 10
-                TerrainHeight(Counter) = TerrainHeight(Counter - 1) + 3
-            CASE IS > 0
-                TerrainHeight(Counter) = TerrainHeight(Counter - 1) + 1
-            CASE ELSE
-                TerrainHeight(Counter) = TerrainHeight(Counter - 1)
-        END SELECT
-        IF TerrainHeight(Counter) > (ScreenHeight - (8 + mode)) THEN
-            TerrainHeight(Counter) = (ScreenHeight - (8 + mode))
-            IF OnFirstHalfScreen THEN Trend = -9 ELSE Trend = -3
-        ELSE
-            IF TerrainHeight(Counter) < (ScreenHeight / 2.2) THEN
-                TerrainHeight(Counter) = (ScreenHeight / 2.2)
-                IF OnFirstHalfScreen THEN Trend = 9 ELSE Trend = 3
-            END IF
-        END IF
-        LINE (Counter, ScreenHeight)-(Counter, TerrainHeight(Counter)), TERRAINCOLOR
-    NEXT Counter
-    Wind = INT(10 * RND + 1) - 5
-    IF (INT(3 * RND + 1) = 1) THEN
-        IF Wind > 0 THEN
-            Wind = Wind + INT(10 * RND + 1)
-        ELSE
-            Wind = Wind - INT(10 * RND + 1)
-        END IF
-    END IF
-    IF Wind <> 0 THEN
-        WindLineLength = Wind * (ScreenWidth / 320)
-        LINE (ScreenWidth / 2, ScreenHeight - 15)-(ScreenWidth / 2 + WindLineLength, ScreenHeight - 15), EXPLOSIONCOLOR
-        IF Wind > 0 THEN ArrowDir = -2 ELSE ArrowDir = 2
-        LINE (ScreenWidth / 2 + WindLineLength, ScreenHeight - 15)-(ScreenWidth / 2 + WindLineLength + ArrowDir, ScreenHeight - 15 - 2), EXPLOSIONCOLOR
-        LINE (ScreenWidth / 2 + WindLineLength, ScreenHeight - 15)-(ScreenWidth / 2 + WindLineLength + ArrowDir, ScreenHeight - 15 + 2), EXPLOSIONCOLOR
-    END IF
-END SUB
+  DO
+    LOCATE 8, 30
+    LINE INPUT "Name of Player 1: "; Player1$
+  LOOP UNTIL Player1$ <> ""
+  Player1$ = LEFT$(Player1$, 10)
 
-SUB PlaceCastles (CastleX(), CastleY(), TerrainHeight())
-    ScaleX# = ScreenWidth / 320
-    ScaleY# = ScreenHeight / 200
-    FOR Counter = 1 TO 2
-        CastleX(Counter) = INT((ScreenWidth / 3.2) * RND + ((ScreenWidth / 1.6 - 3) * (Counter - 1))) + 2
-        CastleY(Counter) = TerrainHeight(CastleX(Counter)) - (9 * ScaleY#)
-        PUT (CastleX(Counter), CastleY(Counter)), CastlePic&, PSET
-        FOR FixTerrain = CastleX(Counter) TO CastleX(Counter) + (7 * ScaleX#)
-            LINE (FixTerrain, ScreenHeight)-(FixTerrain, CastleY(Counter) + (9 * ScaleY#)), TERRAINCOLOR
-            LINE (FixTerrain, 0)-(FixTerrain, CastleY(Counter) - 1), BACKGROUNDCOLOR
-        NEXT FixTerrain
-    NEXT Counter
-END SUB
+  DO
+    LOCATE 10, 30
+    LINE INPUT "Name of Player 2: "; Player2$
+  LOOP UNTIL Player2$ <> ""
+  Player2$ = LEFT$(Player2$, 10)
 
-SUB PlayGame (player1$, player2$, numGames, gravity#)
+  LOCATE 12, 26
+  INPUT "Play to how many total points "; NumGames
+  IF NumGames < 1 THEN NumGames = 1
 
-    
-    DIM TerrainHeight(0 TO 640)
-    DIM TotalWins(1 TO 2)
+  DO
+    LOCATE 14, 22
+    INPUT "Gravity in Meters/Sec (Earth = 9.8)"; grav$
 
-    RANDOMIZE (TIMER)
-
-    IF mode = 9 THEN
-        PALETTE OBJECTCOLOR, 63
+    IF grav$ = "" OR VAL(grav$) = 0 THEN
+      Gravity# = 9.8
     ELSE
-        COLOR 3, 0
+      Gravity# = VAL(grav$)
     END IF
 
-    FOR Counter = 1 TO numGames
-        CLS
-        CALL MakeBattleField(TerrainHeight())
-        CALL PlaceCastles(CastleX(), CastleY(), TerrainHeight())
-        DirectHit = FALSE
-        DO WHILE DirectHit = FALSE
-            LOCATE 1, 1
-            PRINT player1$
-            LOCATE 1, (MaxCol - 1 - LEN(player2$))
-            PRINT player2$
-            LOCATE 1, BaseCol + 3
-            PRINT TotalWins(1); ">Score<"; TotalWins(2)
-            IF Counter MOD 2 THEN FirstPlayer = 1 ELSE FirstPlayer = 2
-            SecondPlayer = ABS(FirstPlayer - 3)
-            DirectHit = DoShot(FirstPlayer, CastleX(FirstPlayer), CastleY(FirstPlayer))
-            IF DirectHit = FALSE THEN
-                LOCATE 1, 1
-                PRINT player1$
-                LOCATE 1, (MaxCol - 1 - LEN(player2$))
-                PRINT player2$
-                DirectHit = DoShot(SecondPlayer, CastleX(SecondPlayer), CastleY(SecondPlayer))
-                IF DirectHit <> FALSE THEN CALL UpdateScores(TotalWins(), SecondPlayer, DirectHit)
-            ELSE
-                CALL UpdateScores(TotalWins(), FirstPlayer, DirectHit)
-            END IF
-        LOOP
-        SLEEP 1
-    NEXT Counter
-
-    SCREEN 0
-    WIDTH 80
-    COLOR 14, 1
-    CLS
-    LOCATE 8, 35: PRINT "GAME OVER!"
-    LOCATE 10, 30: PRINT "Score:"
-    LOCATE 11, 34: PRINT player1$; TAB(30 + 20); TotalWins(1)
-    LOCATE 12, 34: PRINT player2$; TAB(30 + 20); TotalWins(2)
-    Center 24, "Push Any Key To Continue"
-    COLOR 14
-    SparklePause
+  LOOP UNTIL Gravity# > 0
 
 END SUB
 
-FUNCTION PlotShot (StartX, StartY, Angle#, Velocity)
+' GetNum:
+'   Gets valid numeric input from user
+' Parameters:
+'   Row, Col - location to echo input
+'
+FUNCTION GetNum# (Row, Col)
 
-    Angle# = Angle# / 180 * PI#                'Convert degree angle to radians
-    Radius = mode MOD 7
-    InitialXVelocity# = COS(Angle#) * Velocity
-    InitialYVelocity# = SIN(Angle#) * Velocity
-    Oldx# = StartX
-    Oldy# = StartY
-    PLAY "MBo0L32A-L64CL16BL64A+"
-    DirectHit = FALSE
-    Impact = FALSE
-    OnScreen = TRUE
-    PlayerHit = 0
-    NEEDERASE = FALSE
+  Result$ = ""
+  Done = FALSE
+  WHILE INKEY$ <> "": WEND   'Clear keyboard buffer
 
-    IF Velocity < 2 THEN                          'Shot too slow - hit self
-        x# = StartX
-        y# = StartY
-        Impact = TRUE
-        DirectHit = TRUE
-    END IF
+  DO WHILE NOT Done
 
-    DO WHILE (NOT Impact) AND OnScreen
-        x# = StartX + (InitialXVelocity# * t#) + (.5 * (Wind / 5) * t# ^ 2)
-        y# = StartY + ((-1 * (InitialYVelocity# * t#)) + (.5 * gravity# * t# ^ 2)) * (ScreenHeight / 350)
-        IF (x# >= ScreenWidth - 3) OR (x# <= 3) OR (y# >= ScreenHeight - 3) THEN
-          OnScreen = FALSE
+    LOCATE Row, Col
+    PRINT Result$; CHR$(95); " ";
+
+    Kbd$ = INKEY$
+    SELECT CASE Kbd$
+      CASE "0" TO "9"
+        Result$ = Result$ + Kbd$
+      CASE "."
+        IF INSTR(Result$, ".") = 0 THEN
+          Result$ = Result$ + Kbd$
         END IF
-        IF NEEDERASE THEN
-            PUT (Oldx#, Oldy#), shot&, XOR
+      CASE CHR$(13)
+        Done = TRUE
+      CASE CHR$(8)
+        IF LEN(Result$) > 0 THEN
+          Result$ = LEFT$(Result$, LEN(Result$) - 1)
         END IF
-        FOR LookX = -1 TO 1
-            FOR LookY = -1 TO 1
-                IF POINT(x# + LookX, y# + LookY) = TERRAINCOLOR OR POINT(x# + LookX, y# + LookY) = OBJECTCOLOR THEN Impact = TRUE
-            NEXT
-        NEXT
-        IF OnScreen AND NOT Impact AND y# > 0 THEN
-            PUT (x#, y#), shot&, PSET
-            NEEDERASE = TRUE
-            Oldx# = x#
-            Oldy# = y#
-        ELSE
-            NEEDERASE = FALSE
-            IF NOT OnScreen OR y# < 0 THEN
-                Oldx# = 0
-                Oldy# = 0
-            ELSE
-                FOR LookX = -1 TO 1
-                    FOR LookY = -1 TO 1
-                        IF POINT(x# + LookX, y# + LookY) = OBJECTCOLOR THEN DirectHit = TRUE
-                    NEXT
-                NEXT
-            END IF
+      CASE ELSE
+        IF LEN(Kbd$) > 0 THEN
+          BEEP
         END IF
-        t# = t# + .1
-    LOOP
-    IF Impact THEN CALL DoExplosion(x#, y#)
-    IF DirectHit THEN PlayerHit = ExplodeCastle(x#, y#)
-    PlotShot = PlayerHit
+      END SELECT
+  LOOP
+
+  LOCATE Row, Col
+  PRINT Result$; " ";
+
+  GetNum# = VAL(Result$)
 
 END FUNCTION
 
+' GorillaIntro:
+'   Displays gorillas on screen for the first time
+'   allows the graphical data to be put into an array
+' Parameters:
+'   Player1$, Player2$ - The names of the players
+'
+SUB GorillaIntro (Player1$, Player2$)
+
+  LOCATE 18, 34: PRINT "V = View Intro"
+  LOCATE 19, 34: PRINT "P = Play Game"
+  LOCATE 21, 35: PRINT "Your Choice?"
+
+  DO WHILE Char$ = ""
+    Char$ = INKEY$
+  LOOP
+
+  IF Mode = 1 THEN
+    x = 125
+    y = 100
+  ELSE
+    x = 278
+    y = 175
+  END IF
+
+  SCREEN Mode
+  SetScreen
+
+  IF UCASE$(Char$) = "V" THEN
+    Center 2, "Q B A S I C   G O R I L L A S"
+    Center 5, "STARRING:"
+    P$ = Player1$ + " AND " + Player2$
+    Center 7, P$
+  END IF
+
+  VIEW PRINT 9 TO 24
+
+  PALETTE OBJECTCOLOR, BackColor
+
+  DrawGorilla x, y, ARMSDOWN
+  CLS 2
+  DrawGorilla x, y, LEFTUP
+  CLS 2
+  DrawGorilla x, y, RIGHTUP
+  CLS 2
+
+  VIEW PRINT 1 TO 25
+  IF Mode = 1 THEN PALETTE OBJECTCOLOR, 4 ELSE PALETTE OBJECTCOLOR, 46
+
+  IF UCASE$(Char$) = "V" THEN
+    PUT (x - 13, y), GorD&, PSET
+    PUT (x + 47, y), GorD&, PSET
+    Rest 1
+
+    PUT (x - 13, y), GorL&, PSET
+    PUT (x + 47, y), GorR&, PSET
+    PLAY "t120o1l16b9n0baan0bn0bn0baaan0b9n0baan0b"
+    Rest .3
+
+    PUT (x - 13, y), GorR&, PSET
+    PUT (x + 47, y), GorL&, PSET
+    PLAY "o2l16e-9n0e-d-d-n0e-n0e-n0e-d-d-d-n0e-9n0e-d-d-n0e-"
+    Rest .3
+
+    PUT (x - 13, y), GorL&, PSET
+    PUT (x + 47, y), GorR&, PSET
+    PLAY "o2l16g-9n0g-een0g-n0g-n0g-eeen0g-9n0g-een0g-"
+    Rest .3
+
+    PUT (x - 13, y), GorR&, PSET
+    PUT (x + 47, y), GorL&, PSET
+    PLAY "o2l16b9n0baan0g-n0g-n0g-eeen0o1b9n0baan0b"
+    Rest .3
+
+    FOR i = 1 TO 4
+      PUT (x - 13, y), GorL&, PSET
+      PUT (x + 47, y), GorR&, PSET
+      PLAY "T160O0L32EFGEFDC"
+      Rest .1
+      PUT (x - 13, y), GorR&, PSET
+      PUT (x + 47, y), GorL&, PSET
+      PLAY "T160O0L32EFGEFDC"
+      Rest .1
+    NEXT
+  END IF
+
+END SUB
+
+' Intro:
+'   Displays game introduction
+SUB Intro
+  SCREEN 0
+  WIDTH 80
+  MaxCol = 80
+  COLOR 9, 1
+  CLS
+  Center 8, "Q B a s i c    G O R I L L A S"
+  COLOR 14
+  Center 10, "Your mission is to hit your opponent with the"
+  Center 11, "exploding banana by varying the angle and power"
+  Center 12, "of your throw, taking into account wind speed,"
+  Center 13, "gravity and the skyline."
+
+  COLOR 15
+  PLAY "T160O1L8CDEDCDL4ECC"
+  Center 24, "Push any key to continue"
+  SparklePause
+  IF Mode = 1 THEN MaxCol = 40
+END SUB
+
+' MakeCityScape:
+'   Creates random skyline for game
+' Parameters:
+'   BCoor() - a user-defined type array which stores the coordinates of
+'   the upper left corner of each building.
+SUB MakeCityScape (BCoor() AS XYPoint)
+
+  x = 2
+
+  'Set the sloping trend of the city scape. NewHt is new building height
+  Slope = FnRan(6)
+  SELECT CASE Slope
+    CASE 1: NewHt = 15                 'Upward slope
+    CASE 2: NewHt = 130                'Downward slope
+    CASE 3 TO 5: NewHt = 15            '"V" slope - most common
+    CASE 6: NewHt = 130                'Inverted "V" slope
+  END SELECT
+
+  IF Mode = 9 THEN
+    BottomLine = 335                   'Bottom of building
+    HtInc = 10                         'Increase value for new height
+    DefBWidth = 37                     'Default building height
+    RandomHeight = 120                 'Random height difference
+    WWidth = 3                         'Window width
+    WHeight = 6                        'Window height
+    WDifV = 15                         'Counter for window spacing - vertical
+    WDifh = 10                         'Counter for window spacing - horizontal
+  ELSE
+    BottomLine = 190
+    HtInc = 6
+    NewHt = NewHt * 20 \ 35            'Adjust for CGA
+    DefBWidth = 18
+    RandomHeight = 54
+    WWidth = 1
+    WHeight = 2
+    WDifV = 5
+    WDifh = 4
+  END IF
+
+  CurBuilding = 1
+  DO
+
+    SELECT CASE Slope
+      CASE 1
+        NewHt = NewHt + HtInc
+      CASE 2
+        NewHt = NewHt - HtInc
+      CASE 3 TO 5
+        IF x > ScrWidth \ 2 THEN
+          NewHt = NewHt - 2 * HtInc
+        ELSE
+          NewHt = NewHt + 2 * HtInc
+        END IF
+      CASE 4
+        IF x > ScrWidth \ 2 THEN
+          NewHt = NewHt + 2 * HtInc
+        ELSE
+          NewHt = NewHt - 2 * HtInc
+        END IF
+    END SELECT
+
+    'Set width of building and check to see if it would go off the screen
+    BWidth = FnRan(DefBWidth) + DefBWidth
+    IF x + BWidth > ScrWidth THEN BWidth = ScrWidth - x - 2
+
+    'Set height of building and check to see if it goes below screen
+    BHeight = FnRan(RandomHeight) + NewHt
+    IF BHeight < HtInc THEN BHeight = HtInc
+
+    'Check to see if Building is too high
+    IF BottomLine - BHeight <= MaxHeight + GHeight THEN BHeight = MaxHeight + GHeight - 5
+
+    'Set the coordinates of the building into the array
+    BCoor(CurBuilding).XCoor = x
+    BCoor(CurBuilding).YCoor = BottomLine - BHeight
+
+    IF Mode = 9 THEN BuildingColor = FnRan(3) + 4 ELSE BuildingColor = 2
+
+    'Draw the building, outline first, then filled
+    LINE (x - 1, BottomLine + 1)-(x + BWidth + 1, BottomLine - BHeight - 1), BACKGROUND, B
+    LINE (x, BottomLine)-(x + BWidth, BottomLine - BHeight), BuildingColor, BF
+
+    'Draw the windows
+    c = x + 3
+    DO
+      FOR i = BHeight - 3 TO 7 STEP -WDifV
+        IF Mode <> 9 THEN
+          WinColr = (FnRan(2) - 2) * -3
+        ELSEIF FnRan(4) = 1 THEN
+          WinColr = 8
+        ELSE
+          WinColr = WINDOWCOLOR
+        END IF
+        LINE (c, BottomLine - i)-(c + WWidth, BottomLine - i + WHeight), WinColr, BF
+      NEXT
+      c = c + WDifh
+    LOOP UNTIL c >= x + BWidth - 3
+
+    x = x + BWidth + 2
+
+    CurBuilding = CurBuilding + 1
+
+  LOOP UNTIL x > ScrWidth - HtInc
+
+  LastBuilding = CurBuilding - 1
+
+  'Set Wind speed
+  Wind = FnRan(10) - 5
+  IF FnRan(3) = 1 THEN
+    IF Wind > 0 THEN
+      Wind = Wind + FnRan(10)
+    ELSE
+      Wind = Wind - FnRan(10)
+    END IF
+  END IF
+
+  'Draw Wind speed arrow
+  IF Wind <> 0 THEN
+    WindLine = Wind * 3 * (ScrWidth \ 320)
+    LINE (ScrWidth \ 2, ScrHeight - 5)-(ScrWidth \ 2 + WindLine, ScrHeight - 5), ExplosionColor
+    IF Wind > 0 THEN ArrowDir = -2 ELSE ArrowDir = 2
+    LINE (ScrWidth / 2 + WindLine, ScrHeight - 5)-(ScrWidth / 2 + WindLine + ArrowDir, ScrHeight - 5 - 2), ExplosionColor
+    LINE (ScrWidth / 2 + WindLine, ScrHeight - 5)-(ScrWidth / 2 + WindLine + ArrowDir, ScrHeight - 5 + 2), ExplosionColor
+  END IF
+END SUB
+
+'  PlaceGorillas:
+'    PUTs the Gorillas on top of the buildings.  Must have drawn
+'    Gorillas first.
+'  Parameters:
+'    BCoor() - user-defined TYPE array which stores upper left coordinates
+'    of each building.
+SUB PlaceGorillas (BCoor() AS XYPoint)
+    
+  IF Mode = 9 THEN
+    XAdj = 14
+    YAdj = 30
+  ELSE
+    XAdj = 7
+    YAdj = 16
+  END IF
+  SclX# = ScrWidth / 320
+  SclY# = ScrHeight / 200
+    
+  'Place gorillas on second or third building from edge
+  FOR i = 1 TO 2
+    IF i = 1 THEN BNum = FnRan(2) + 1 ELSE BNum = LastBuilding - FnRan(2)
+
+    BWidth = BCoor(BNum + 1).XCoor - BCoor(BNum).XCoor
+    GorillaX(i) = BCoor(BNum).XCoor + BWidth / 2 - XAdj
+    GorillaY(i) = BCoor(BNum).YCoor - YAdj
+    PUT (GorillaX(i), GorillaY(i)), GorD&, PSET
+  NEXT i
+
+END SUB
+
+' PlayGame:
+'   Main game play routine
+' Parameters:
+'   Player1$, Player2$ - player names
+'   NumGames - number of games to play
+SUB PlayGame (Player1$, Player2$, NumGames)
+  DIM BCoor(0 TO 30) AS XYPoint
+  DIM TotalWins(1 TO 2)
+
+  J = 1
+  
+  FOR i = 1 TO NumGames
+    
+    CLS
+    RANDOMIZE (TIMER)
+    CALL MakeCityScape(BCoor())
+    CALL PlaceGorillas(BCoor())
+    DoSun SUNHAPPY
+    Hit = FALSE
+    DO WHILE Hit = FALSE
+      J = 1 - J
+      LOCATE 1, 1
+      PRINT Player1$
+      LOCATE 1, (MaxCol - 1 - LEN(Player2$))
+      PRINT Player2$
+      Center 23, LTRIM$(STR$(TotalWins(1))) + ">Score<" + LTRIM$(STR$(TotalWins(2)))
+      Tosser = J + 1: Tossee = 3 - J
+
+      'Plot the shot.  Hit is true if Gorilla gets hit.
+      Hit = DoShot(Tosser, GorillaX(Tosser), GorillaY(Tosser))
+
+      'Reset the sun, if it got hit
+      IF SunHit THEN DoSun SUNHAPPY
+
+      IF Hit = TRUE THEN CALL UpdateScores(TotalWins(), Tosser, Hit)
+    LOOP
+    SLEEP 1
+  NEXT i
+
+  SCREEN 0
+  WIDTH 80
+  MaxCol = 80
+  COLOR 14, 1
+  CLS
+  Center 8, "GAME OVER!"
+  Center 10, "Score:"
+  LOCATE 11, 34: PRINT Player1$; TAB(50); TotalWins(1)
+  LOCATE 12, 34: PRINT Player2$; TAB(50); TotalWins(2)
+  Center 24, "Push any key to continue"
+  COLOR 14
+  SparklePause
+END SUB
+
+' PlayGame:
+'   Plots banana shot across the screen
+' Parameters:
+'   StartX, StartY - starting shot location
+'   Angle - shot angle
+'   Velocity - shot velocity
+'   PlayerNum - the banana thrower
+FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
+
+  Angle# = Angle# / 180 * pi#  'Convert degree angle to radians
+  Radius = Mode MOD 7
+
+  InitXVel# = COS(Angle#) * Velocity
+  InitYVel# = SIN(Angle#) * Velocity
+
+  oldx# = StartX
+  oldy# = StartY
+
+  'draw gorilla toss
+  IF PlayerNum = 1 THEN
+    PUT (StartX, StartY), GorL&, PSET
+  ELSE
+    PUT (StartX, StartY), GorR&, PSET
+  END IF
+  
+  'throw sound
+  PLAY "MBo0L32A-L64CL16BL64A+"
+  Rest .1
+
+  'redraw gorilla
+  PUT (StartX, StartY), GorD&, PSET
+
+  adjust = Scl(4)                   'For scaling CGA
+
+  xedge = Scl(9) * (2 - PlayerNum)  'Find leading edge of banana for check
+
+  Impact = FALSE
+  ShotInSun = FALSE
+  OnScreen = TRUE
+  PlayerHit = 0
+  NeedErase = FALSE
+
+  StartXPos = StartX
+  StartYPos = StartY - adjust - 3
+
+  IF PlayerNum = 2 THEN
+    StartXPos = StartXPos + Scl(25)
+    direction = Scl(4)
+  ELSE
+    direction = Scl(-4)
+  END IF
+
+  IF Velocity < 2 THEN              'Shot too slow - hit self
+    x# = StartX
+    y# = StartY
+    pointval = OBJECTCOLOR
+  END IF
+   
+  DO WHILE (NOT Impact) AND OnScreen
+ 
+  Rest .02
+
+  'Erase old banana, if necessary
+  IF NeedErase THEN
+    NeedErase = FALSE
+    CALL DrawBan(oldx#, oldy#, oldrot, FALSE)
+  END IF
+
+  x# = StartXPos + (InitXVel# * t#) + (.5 * (Wind / 5) * t# ^ 2)
+  y# = StartYPos + ((-1 * (InitYVel# * t#)) + (.5 * Gravity# * t# ^ 2)) * (ScrHeight / 350)
+         
+  IF (x# >= ScrWidth - Scl(10)) OR (x# <= 3) OR (y# >= ScrHeight - 3) THEN
+    OnScreen = FALSE
+  END IF
+
+          
+  IF OnScreen AND y# > 0 THEN
+
+    'check it
+    LookY = 0
+    LookX = Scl(8 * (2 - PlayerNum))
+    DO
+      pointval = POINT(x# + LookX, y# + LookY)
+      IF pointval = 0 THEN
+        Impact = FALSE
+        IF ShotInSun = TRUE THEN
+          IF ABS(ScrWidth \ 2 - x#) > Scl(20) OR y# > SunHt THEN ShotInSun = FALSE
+        END IF
+      ELSEIF pointval = SUNATTR AND y# < SunHt THEN
+        IF NOT SunHit THEN DoSun SUNSHOCK
+        SunHit = TRUE
+        ShotInSun = TRUE
+      ELSE
+        Impact = TRUE
+      END IF
+      LookX = LookX + direction
+      LookY = LookY + Scl(6)
+    LOOP UNTIL Impact OR LookX <> Scl(4)
+   
+    IF NOT ShotInSun AND NOT Impact THEN
+      'plot it
+      rot = (t# * 10) MOD 4
+      CALL DrawBan(x#, y#, rot, TRUE)
+      NeedErase = TRUE
+    END IF
+            
+    oldx# = x#
+    oldy# = y#
+    oldrot = rot
+
+  END IF
+
+      
+  t# = t# + .1
+
+  LOOP
+
+  IF pointval <> OBJECTCOLOR AND Impact THEN
+    CALL DoExplosion(x# + adjust, y# + adjust)
+  ELSEIF pointval = OBJECTCOLOR THEN
+    PlayerHit = ExplodeGorilla(x#, y#)
+  END IF
+
+  PlotShot = PlayerHit
+
+END FUNCTION
+
+' Rest:
+'   pauses the program
+SUB Rest (t#)
+    s# = TIMER
+    t2# = MachSpeed * t# / SPEEDCONST
+    DO
+    LOOP UNTIL TIMER - s# > t2#
+END SUB
+
+' Scl:
+' Pass the number in to scaling for cga.  If the number is a decimal, then we
+' want to scale down for cga or scale up for ega.  This allows a full range
+' of numbers to be generated for scaling.
+' (i.e. for 3 to get scaled to 1, pass in 2.9)
+FUNCTION Scl (n!)
+
+  IF n! <> INT(n!) THEN
+      IF Mode = 1 THEN n! = n! - 1
+  END IF
+  IF Mode = 1 THEN
+      Scl = CINT(n! / 2 + .1)
+  ELSE
+      Scl = CINT(n!)
+  END IF
+
+END FUNCTION
+
+' SetScreen:
+'   Sets the appropriate palette statements
+SUB SetScreen
+
+  IF Mode = 9 THEN
+    ExplosionColor = 2
+    BackColor = 1
+    PALETTE 0, 1
+    PALETTE 1, 46
+    PALETTE 2, 44
+    PALETTE 3, 54
+    PALETTE 5, 7
+    PALETTE 6, 4
+    PALETTE 7, 3
+    PALETTE 9, 63       'Display Color
+  ELSE
+    ExplosionColor = 3
+    BackColor = 0
+    PALETTE 0, 0
+    PALETTE 1, 4
+    PALETTE 2, 7
+    PALETTE 3, 14
+  END IF
+
+END SUB
+
+' SparklePause:
+'   Creates flashing border for intro and game over screens
 SUB SparklePause
 
-    
-    COLOR 15, 1
+  COLOR 15, 1
+  a$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
+  WHILE INKEY$ <> "": WEND 'Clear keyboard buffer
 
-    a$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
+  WHILE INKEY$ = ""
+    FOR a = 1 TO 5
+      LOCATE 1, 1
+      PRINT MID$(a$, a, 80);
+      LOCATE 20, 1
+      PRINT MID$(a$, 6 - a, 80);
 
-    WHILE INKEY$ <> "": WEND'remove all keys from buffer
-
-    WHILE INKEY$ = ""
-        FOR a = 1 TO 5
-            LOCATE 1, 1
-            PRINT MID$(a$, a, 80);
-            LOCATE 20, 1
-            PRINT MID$(a$, 6 - a, 80);
-
-            FOR b = 2 TO 19
-                c = (a + b) MOD 5
-                IF c = 1 THEN
-                    LOCATE b, 80
-                    PRINT "*";
-                    LOCATE 21 - b, 1
-                    PRINT "*";
-                ELSE
-                    LOCATE b, 80
-                    PRINT " ";
-                    LOCATE 21 - b, 1
-                    PRINT " ";
-                END IF
-            NEXT b
-        NEXT a
-    WEND
-
+      FOR b = 2 TO 19
+        c = (a + b) MOD 5
+        IF c = 1 THEN
+          LOCATE b, 80
+          PRINT "*";
+          LOCATE 21 - b, 1
+          PRINT "*";
+        ELSE
+          LOCATE b, 80
+          PRINT " ";
+          LOCATE 21 - b, 1
+          PRINT " ";
+        END IF
+      NEXT b
+    NEXT a
+  WEND
 END SUB
 
+' UpdateScores:
+'   Updates players' scores
+' Parameters:
+'   Record - players' scores
+'   PlayerNum - player
+'   Results - results of player's shot
 SUB UpdateScores (Record(), PlayerNum, Results)
-    IF Results = SHOTSELF THEN
-        Record(ABS(PlayerNum - 3)) = Record(ABS(PlayerNum - 3)) + 1
-    ELSE
-        Record(PlayerNum) = Record(PlayerNum) + 1
-    END IF
+  IF Results = HITSELF THEN
+    Record(ABS(PlayerNum - 3)) = Record(ABS(PlayerNum - 3)) + 1
+  ELSE
+    Record(PlayerNum) = Record(PlayerNum) + 1
+  END IF
 END SUB
 
-
+'  VictoryDance:
+'    gorilla dances after he has eliminated his opponent
+'  Parameters:
+'    Player - which gorilla is dancing
+SUB VictoryDance (Player)
+
+  FOR i# = 1 TO 4
+    PUT (GorillaX(Player), GorillaY(Player)), GorL&, PSET
+    PLAY "MFO0L32EFGEFDC"
+    Rest .2
+    PUT (GorillaX(Player), GorillaY(Player)), GorR&, PSET
+    PLAY "MFO0L32EFGEFDC"
+    Rest .2
+  NEXT
+END SUB
+

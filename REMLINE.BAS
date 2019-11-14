@@ -1,33 +1,28 @@
-DEFINT A-Z
 '
 '   Microsoft RemLine - Line Number Removal Utility
-'   Copyright (C) Microsoft Corporation   - 1985, 1986, 1987
+'   Copyright (C) Microsoft Corporation 1985-1990
 '
-'   REMLINE.BAS is a program to remove line numbers from Microsoft BASIC
+'   REMLINE.BAS is a program to remove line numbers from Microsoft Basic
 '   Programs. It removes only those line numbers that are not the object
 '   of one of the following statements: GOSUB, RETURN, GOTO, THEN, ELSE,
 '   RESUME, RESTORE, or RUN.
 '
-'   REMLINE is run by typing
-'
-'      REMLINE [<input> [, <output>]]
-'
-'   where <input> is the name of the file to be processed and <output>
-'   is the name of the file or device to receive the reformatted output.
-'   If no extension is given, .BAS is assumed (except for output devices).
-'   If file names are not given, REMLINE prompts for file names. If both
-'   file names are the same, REMLINE saves the original file with the
-'   extension .BAK.
+'   When REMLINE is run, it will ask for the name of the file to be
+'   processed and the name of the file or device to receive the
+'   reformatted output. If no extension is given, .BAS is assumed (except
+'   for output devices). If filenames are not given, REMLINE prompts for
+'   file names. If both filenames are the same, REMLINE saves the original
+'   file with the extension .BAK.
 '
 '   REMLINE makes several assumptions about the program:
 '
 '     1. It must be correct syntactically, and must run in BASICA or
-'        GWBASIC interpreter.
+'        GW-BASIC interpreter.
 '     2. There is a 400 line limit. To process larger files, change
 '        MaxLines constant.
 '     3. The first number encountered on a line is considered a line
-'        number; thus some continuation lines (in a compiler specific
-'        constructiion) may not be handled correctly.
+'        number; thus some continuation lines (in a compiler-specific
+'        construction) may not be handled correctly.
 '     4. REMLINE can handle simple statements that test the ERL function
 '        using  relational operators such as =, <, and >. For example,
 '        the following statement is handled correctly:
@@ -44,9 +39,9 @@ DEFINT A-Z
 '
 '   If you do not like the way REMLINE formats its output, you can modify
 '   the output lines in SUB GenOutFile. An example is shown in comments.
+DEFINT A-Z
 
-' Function and Subprogram declarations
-
+' Function and Subprocedure declarations
 DECLARE FUNCTION GetToken$ (Search$, Delim$)
 DECLARE FUNCTION StrSpn% (InString$, Separator$)
 DECLARE FUNCTION StrBrk% (InString$, Separator$)
@@ -57,7 +52,6 @@ DECLARE SUB GenOutFile ()
 DECLARE SUB InitKeyTable ()
 
 ' Global and constant data
-
 CONST TRUE = -1
 CONST false = 0
 CONST MaxLines = 400
@@ -67,7 +61,6 @@ DIM SHARED LineCount
 DIM SHARED Seps$, InputFile$, OutputFile$, TmpFile$
 
 ' Keyword search data
-
 CONST KeyWordCount = 9
 DIM SHARED KeyWordTable$(KeyWordCount)
 
@@ -75,7 +68,6 @@ KeyData:
    DATA THEN, ELSE, GOSUB, GOTO, RESUME, RETURN, RESTORE, RUN, ERL, ""
 
 ' Start of module-level program code
-
    Seps$ = " ,:=<>()" + CHR$(9)
    InitKeyTable
    GetFileNames
@@ -121,34 +113,34 @@ FileErr2:
 ' Input:
 '   Uses globals KeyWordTable$, KeyWordCount, and Seps$
 ' Output:
-'   Modefies LineTable! and LineCount
+'   Modifies LineTable! and LineCount
 '
 SUB BuildTable STATIC
 
    DO WHILE NOT EOF(1)
       ' Get line and first token
       LINE INPUT #1, InLin$
-      token$ = GetToken$(InLin$, Seps$)
-      DO WHILE (token$ <> "")
+      Token$ = GetToken$(InLin$, Seps$)
+      DO WHILE (Token$ <> "")
          FOR KeyIndex = 1 TO KeyWordCount
             ' See if token is keyword
-            IF (KeyWordTable$(KeyIndex) = UCASE$(token$)) THEN
+            IF (KeyWordTable$(KeyIndex) = UCASE$(Token$)) THEN
                ' Get possible line number after keyword
-               token$ = GetToken$("", Seps$)
+               Token$ = GetToken$("", Seps$)
                ' Check each token to see if it is a line number
                ' (the LOOP is necessary for the multiple numbers
                ' of ON GOSUB or ON GOTO). A non-numeric token will
                ' terminate search.
-               DO WHILE (IsDigit(LEFT$(token$, 1)))
+               DO WHILE (IsDigit(LEFT$(Token$, 1)))
                   LineCount = LineCount + 1
-                  LineTable!(LineCount) = VAL(token$)
-                  token$ = GetToken$("", Seps$)
-                  IF token$ <> "" THEN KeyIndex = 0
+                  LineTable!(LineCount) = VAL(Token$)
+                  Token$ = GetToken$("", Seps$)
+                  IF Token$ <> "" THEN KeyIndex = 0
                LOOP
             END IF
          NEXT KeyIndex
          ' Get next token
-         token$ = GetToken$("", Seps$)
+         Token$ = GetToken$("", Seps$)
       LOOP
    LOOP
 
@@ -170,9 +162,9 @@ SUB GenOutFile STATIC
       LINE INPUT #1, InLin$
       IF (InLin$ <> "") THEN
          ' Get first token and process if it is a line number
-         token$ = GetToken$(InLin$, Sep$)
-         IF IsDigit(LEFT$(token$, 1)) THEN
-            LineNumber! = VAL(token$)
+         Token$ = GetToken$(InLin$, Sep$)
+         IF IsDigit(LEFT$(Token$, 1)) THEN
+            LineNumber! = VAL(Token$)
             FoundNumber = false
             ' See if line number is in table of referenced line numbers
             FOR index = 1 TO LineCount
@@ -182,8 +174,8 @@ SUB GenOutFile STATIC
             NEXT index
             ' Modify line strings
             IF (NOT FoundNumber) THEN
-               token$ = SPACE$(LEN(token$))
-               MID$(InLin$, StrSpn(InLin$, Sep$), LEN(token$)) = token$
+               Token$ = SPACE$(LEN(Token$))
+               MID$(InLin$, StrSpn(InLin$, Sep$), LEN(Token$)) = Token$
             END IF
               
             ' You can replace the previous lines with your own
@@ -212,36 +204,28 @@ END SUB
 
 '
 ' GetFileNames:
-'  Gets a file name from COMMAND$ or by prompting the user.
+'  Gets a file name by prompting the user.
 ' Input:
-'  Used Command$ or user input
+'  User input
 ' Output:
 '  Defines InputFiles$ and OutputFiles$
 '
 SUB GetFileNames STATIC
 
-   IF (COMMAND$ = "") THEN
-      CLS
-      PRINT " Microsoft RemLine: Line Number Removal Utility"
-      PRINT "       (.BAS assumed if no extension given)"
-      PRINT
-      INPUT "      Input file name (ENTER to terminate): ", InputFile$
-      IF InputFile$ = "" THEN END
-      INPUT "      Output file name (ENTER to print to screen): ", OutputFile$
-      PRINT
-      IF (OutputFile$ = "") THEN OutputFile$ = "CON"
-   ELSE
-      InputFile$ = UCASE$(GetToken$(COMMAND$, Seps$))
-      OutputFile$ = UCASE$(GetToken$("", Seps$))
-      IF (OutputFile$ = "") THEN
-         INPUT "      Output file name (ENTER to print to screen): ", OutputFile$
-         PRINT
-         IF (OutputFile$ = "") THEN OutputFile$ = "CON"
-      END IF
-   END IF
+    CLS
+    PRINT " Microsoft RemLine: Line Number Removal Utility"
+    PRINT "       (.BAS assumed if no extension given)"
+    PRINT
+    INPUT "      Input file name (ENTER to terminate): ", InputFile$
+    IF InputFile$ = "" THEN END
+    INPUT "      Output file name (ENTER to print to screen): ", OutputFile$
+    PRINT
+    IF (OutputFile$ = "") THEN OutputFile$ = "CON"
+
    IF INSTR(InputFile$, ".") = 0 THEN
       InputFile$ = InputFile$ + ".BAS"
    END IF
+
    IF INSTR(OutputFile$, ".") = 0 THEN
       SELECT CASE OutputFile$
          CASE "CON", "SCRN", "PRN", "COM1", "COM2", "LPT1", "LPT2", "LPT3"
@@ -250,6 +234,7 @@ SUB GetFileNames STATIC
             OutputFile$ = OutputFile$ + ".BAS"
       END SELECT
    END IF
+
    DO WHILE InputFile$ = OutputFile$
       TmpFile$ = LEFT$(InputFile$, INSTR(InputFile$, ".")) + "BAK"
       ON ERROR GOTO FileErr1
@@ -333,7 +318,7 @@ END SUB
 '
 ' IsDigit:
 '  Returns true if character passed is a decimal digit. Since any
-'  BASIC token starting with a digit is a number, the function only
+'  Basic token starting with a digit is a number, the function only
 '  needs to check the first digit. Doesn't check for negative numbers,
 '  but that's not needed here.
 ' Input:
