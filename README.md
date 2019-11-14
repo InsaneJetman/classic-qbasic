@@ -1,32 +1,17 @@
-# QuickBASIC 1.0 Examples
-These examples are identical to the examples in chapter 9 of the manual, under the sections headed by the statement/function noted.
+# QuickBASIC 2.0/3.0 Examples
+Demonstration and utility programs written in BASIC.
 
-### CALL.BAS
-This demonstrates the use of the CALL statement
+### BUG.BAS
+A program that draws several triangles on the screen using the "*" character.
 
-### COMMAND.BAS
-This shows the use of the COMMAND$ function
+### CALLSHAP.BAS, EX.BAS, TRIANGLE.BAS, SQUARE.BAS
+A program that draws shapes on the screen using the "*" character.
 
-### DEFFN.BAS
-This shows the use of DEF FN in multi-line functions
+### DEMO.BAS
+A program that draws a triangle on the screen using the "*" character.
 
-### DRAW.BAS
-This shows the use of the DRAW statement
-
-### MAIN.BAS, DIGIT.BAS, DEC.BAS
-This example shows the use of the CHAIN statement as well as COMMON variables
-
-### PLAY.BAS
-This shows the use of the PLAY statement
-
-### REDIM.BAS
-This shows the use of the REDIM statement with dynamic arrays and ERASE
-
-### SHARED.BAS
-This shows the use of SHARE statement in named subroutines with shared variables
-
-### SUB.BAS
-This shows the use of SUB..SUB END/SUB EXIT to create named subroutines
+### PPRINT.BAS
+A program to format QuickBASIC source files that include the formatting metacommands found in QuickBASIC V1.00 and earlier Microsoft BASIC Compilers.
 
 ### REMLINE.BAS
-This program is designed to take programs written for a Microsoft BASIC Interpreter and remove the unreferenced line numbers for use with QuickBASIC. REMLINE assumes that the program is syntactically correct.
+A program to remove line numbers from Microsoft BASIC Programs. It removes only those line numbers that are not the object of a goto, gosub or if-then.

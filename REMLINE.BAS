@@ -1,5 +1,7 @@
-'$linesize:132
-'   REMLINE.BAS is a program to remove line number from Microsoft BASIC
+'   Microsoft RemLine- Line Number Removal Utility
+'   Copyright (C) Microsoft Corporation- 1985,1986
+
+'   REMLINE.BAS is a program to remove line numbers from Microsoft BASIC
 '   Programs. It removes only those line numbers that are not the object
 '   of a goto, gosub or if-then
 '
@@ -8,14 +10,13 @@
 '			REMLINE [<input file> [, <output file>]]
 '
 '   where <input file> is any input file name and <output file> is 
-'         is any output file name. If <output file> is no present 
-'         the output goes to the console. If <input file> is not
-'         present the input is from the keyboard. If <output file>
+'         is any output file name. If <output file> is not present 
+'         the output goes to the console.  If <output file>
 '         is present <input file> has to be present.
 '
 '   It makes several assumptions about the program
 '	 1. Program is correct syntactically, and runs in an MS Interpreter.
-'     2. 200 limit on referenced line numbers. If larger, change LineTable 
+'     2. 200 limit on referenced line numbers. If larger, change LineTable!
 '        declaration.
 '     3. The first number encountered on a line is considered a line num-
 '        ber; thus some continuation lines (in a compiler specific 
@@ -24,21 +25,21 @@
 '        REMLINE should not be used on programs which depend on ERL.
 
 	DEFINT a - z 
-	DIM SHARED KeyWordTable$( 6 ) 
-	DIM SHARED LineTable( 400 ) 
+	DIM SHARED KeyWordTable$( 8 ) 
+	DIM SHARED LineTable!( 400 )
 	DIM KeyWordCount, LineCount, Seps$
 	DIM KeyBoard, Console
 	DIM InputFile$, OutputFile$
 	 
 '
-' FNToUpper$ - Convert string to upper case
+' FNToUpper$ - Convert string to uppercase
 ' Description:
-'  This routine converts a string to upper case. If already upper case
+'  This routine converts a string to uppercase. If already uppercase
 '  nothing is done. Returns a null string if input is null
 ' Input:
 '  InString$ - string to convert
 ' Output:
-'  FNToUpper$ - upper case string
+'  FNToUpper$ - uppercase string
 ' Uses:
 '  AscChar - temp used to hold ASCII form of character
 '  LenInString - Length of input string
@@ -67,7 +68,7 @@ End Def
 ' a character that is not part of the Separater string. This can be used 
 ' with FNStrBrk to isolate strings within strings that are separated by
 ' blanks, comma etc. whatever is specified in Separater$.  This is especially
-' helpfull in extracting parameters from the command line. See FNGetToken$
+' helpful in extracting parameters from the command line. See FNGetToken$
 ' for example of use.
 '
 ' Input:
@@ -81,7 +82,7 @@ End Def
 '  LenInString, LenSeprater = length parameter strings
 '  ChTemp$ = temp used for current character from InString$
 '  StartFound = Logical flag if search was successful
-'  IndexSeparater, IndexInString = current indexes into parameter strings
+'  IndexSeparater, IndexInString = current indices into parameter strings
 '
 Def FNStrSpn(InString$, Separater$)
 
@@ -127,7 +128,7 @@ End Def
 ' Uses:
 '  LenString1 = length parameter string
 '  ChTemp$ = temp used for current character from String1$
-'  IndexString1 = current indexes into parameter string
+'  IndexString1 = current indices into parameter string
 '
 Def FNStrBrk(String1$, String2$)
 
@@ -148,11 +149,11 @@ End Def
 ' FNGetToken$ - Extract a token for a string.
 ' Description:
 ' This routine extracts tokens from strings. A token is a word that is 
-' surrounded by separaters, such as spaces or commas. It is us ually the
+' surrounded by separaters, such as spaces or commas. It is usually the
 ' word of interest and examining sentences or commands. If the string
 ' to search for tokens "Search$" is null (.i.e "") then the last
 ' non-null string passed will be used. The allows for multiple calls
-' to FNGetToken$ to move through the string. The sequences then of calls
+' to FNGetToken$ to move through the string. EG: the sequences of calls
 '  would be:
 '    token$ = FNGetToken$("token string, a short one", " ,")
 '    while (token$ <> "")
@@ -161,7 +162,7 @@ End Def
 '    wend
 ' This will return "token", "string", "a", "short", "one" 
 '
-' Note that the token is returned as an UPPER case character string.
+' Note that the token is returned as an Uppercase character string.
 '
 ' Input:
 '  Search$ = string to search
@@ -183,7 +184,7 @@ def FNGetToken$(Search$, InSeps$)
 	else TokenIndex2 = 1: _
 		TokenString$ = Search$
 	' If last separater position is past end of search string then no more
-	' tokens can be on string, since searching is started from this position
+	' tokens can be in string, since searching is started from this position
 	' Exit with null return in this case
 	if (TokenIndex2 >= len(Search$)) then _
 		FNGetToken$ = "": Exit Def
@@ -202,17 +203,17 @@ def FNGetToken$(Search$, InSeps$)
 	if (TokenIndex2 = 0) then _
 		TokenIndex2 = len(Search$) + 1 _
 	else TokenIndex2 = TokenIndex1 + TokenIndex2 - 1
-	' Cut out token from search string and convert to upper case. 
-	' It is converted to upper case since string compares are case sensitive
+	' Cut out token from search string and convert to uppercase. 
+	' It is converted to uppercase since string compares are case sensitive
 	FNGetToken$ = FNToUpper$(mid$(Search$,TokenIndex1,TokenIndex2 - TokenIndex1))
 end def
 
 '
 ' FNIsNumber - Checks to see if character a number or alpha
 ' Description:
-'  This routine returns true if character passed in the range 0 - 9
+'  This routine returns true if character passed is in the range 0 - 9
 '  It returns false if not. It is used to tell wither a token is
-'  a number or apha.
+'  a number or alpha.
 ' Input:
 '  Char - character to check
 ' Output:
@@ -243,12 +244,19 @@ sub GetFileNames static
 shared Console, InputFile$, OutputFile$, Seps$, true, false
 
 	Console = false
-	if (Command$ = "") then _
-		print "No Input file. ": Inputfile$ = "": goto ExitGet
-	InputFile$ = FNGetToken$(Command$, Seps$)
-	OutputFile$ = FNGetToken$("", Seps$)
-	if (OutputFile$ = "") then _
-		Console = true
+	if (Command$ = "") then
+		print " Microsoft RemLine: Line Number Removal Utility"
+		print " "
+		Input "    Input Filename (return to terminate)";InputFile$
+		If inputfile$ = "" Then Exit Sub
+		Input "    Output Filename (default is console:)";OutputFile$
+		if (OutputFile$ = "") then Console = true
+		CLS
+	    ELSE
+		InputFile$ = FNGetToken$(Command$, Seps$)
+		OutputFile$ = FNGetToken$("", Seps$)
+		if (OutputFile$ = "") then Console = true
+	END IF
 
 ExitGet:
 end sub
@@ -261,13 +269,13 @@ end sub
 '  into a table of these line numbers. This table is used during a second
 '  pass at the source to remove all line numbers not in this list
 ' Input:
-'  KeyWordTable$ - array of keyword that have line number following them
+'  KeyWordTable$ - array of keywords that have line number following them
 '  KeyWordCount - number of entries in KeyWordTable$
 '  Seps$ - current token Seps$
 '  true, false - true, false flags
 ' Output:
-'  LineTable - table of references line numbers   
-'  LineCount - number of lines in LineTable
+'  LineTable! - table of referenced line numbers
+'  LineCount - number of lines in LineTable!
 ' 
 sub BuildTable	static
 shared KeyWordCount, Seps$, LineCount, false, true
@@ -284,8 +292,9 @@ shared KeyWordCount, Seps$, LineCount, false, true
 				' search (another keyword etc.)
 				while (FNIsNumber(Left$(token$,1)))
 					LineCount = LineCount + 1
-					LineTable(LineCount) = val(token$)
+					LineTable!(LineCount) = val(token$)
 					token$ = FNGetToken$("", Seps$)
+					if token$ <> "" then KeyIndex = 0
 				wend 
 KeyNotFound:
 			next KeyIndex
@@ -302,8 +311,8 @@ end Sub
 '  This routine generates the output file removing the unreferenced line
 '  numbers. 
 ' Input:
-'  LineTable - Table of line number that are referenced
-'  LineCount - number of entries in LineTable
+'  LineTable! - Table of line numbers that are referenced
+'  LineCount - number of entries in LineTable!
 '  Seps$ - Separaters used between keywords
 '   Console - flags if output to file 
 '  false, true - logical flags
@@ -317,10 +326,10 @@ shared false, true, Seps$, LineCount, Console
 		if (inlin$ = "") then goto NoLine
 		token$ = FNGetToken$(inlin$, Seps$)
 		if (not FNIsNumber(Left$(token$,1))) then goto NoLine
-		LineNumber = VAL(token$)
+		Linenumber! = VAL(token$)
 		FoundNumber = false
 		for index = 1 to LineCount
-			if (LineNumber = LineTable(index)) then _
+			if (Linenumber! = LineTable!(index)) then _
 				FoundNumber = true
 		next index
 		if (not FoundNumber) then _
@@ -337,7 +346,7 @@ end sub
 SUB initsys STATIC
 SHARED true, false, KeyWordCount, Seps$, KeyWordTable$()
 
-	Seps$ = " ,:": true = -1: false = 0 
+	Seps$ = " ,:	": true = -1: false = 0 
 	RESTORE keydata       'keywords 
 	' Initialize the keyword table. Keywords are recognized so that 
 	' the difference between a line number and a numeric contstant can
@@ -354,7 +363,7 @@ END SUB
 '  keyword search data 
 
 keydata:
-	DATA THEN, ELSE, GOSUB, GOTO, RESUME, RESTORE, "" 
+	DATA THEN, ELSE, GOSUB, GOTO, RESUME, RETURN, RESTORE, RUN, "" 
 
 main:
 	CALL initsys 
@@ -370,3 +379,4 @@ main:
 	CLOSE #1 
 	ExitMain:
 end
+
