@@ -41,9 +41,7 @@ DIM SHARED BaseCol
 
     Intro
     GetInputs name1$, name2$, numGames, gravity#
-
     GOSUB InitializeVariables
-
     PlayGame name1$, name2$, numGames, gravity#
     EndGame
 END
@@ -74,6 +72,7 @@ InitializeVariables:
     mode = 9
     SCREEN mode
     ON ERROR GOTO 0
+    
     IF mode = 9 THEN
         ScreenWidth = 640
         ScreenHeight = 350
@@ -192,6 +191,7 @@ END FUNCTION
 SUB EndGame
 
     SCREEN 0
+    WIDTH 80
     COLOR 15, 0
     CLS
 
@@ -288,9 +288,10 @@ END FUNCTION
 SUB Intro
 
     SCREEN 0
+    WIDTH 80
     COLOR 12, 1
     CLS
-    Center 8, "Q u i c k B A S I C   C A S T L E S"
+    Center 8, "Q B a s i c    C A T A P U L T"
     COLOR 14
     Center 10, "Your mission is to destroy your opponent's castle"
     Center 11, "by varying the angle and power of your catapult"
@@ -436,6 +437,7 @@ SUB PlayGame (player1$, player2$, numGames, gravity#)
     NEXT Counter
 
     SCREEN 0
+    WIDTH 80
     COLOR 14, 1
     CLS
     LOCATE 8, 35: PRINT "GAME OVER!"
@@ -512,9 +514,12 @@ END FUNCTION
 
 SUB SparklePause
 
+    
     COLOR 15, 1
 
     a$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
+
+    WHILE INKEY$ <> "": WEND'remove all keys from buffer
 
     WHILE INKEY$ = ""
         FOR a = 1 TO 5
@@ -550,3 +555,4 @@ SUB UpdateScores (Record(), PlayerNum, Results)
     END IF
 END SUB
 
+

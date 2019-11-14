@@ -8,12 +8,16 @@ DEFINT A-Z
 '   of one of the following statements: GOSUB, RETURN, GOTO, THEN, ELSE,
 '   RESUME, RESTORE, or RUN.
 '
-'   When REMLINE is run, it will ask for the name of the file to be
-'   processed and the name of the file or device to receive the
-'   reformatted output. If no extension is given, .BAS is assumed (except
-'   for output devices). If file names are not given, REMLINE prompts for
-'   file names. If both file names are the same, REMLINE saves the original
-'   file with the extension .BAK.
+'   REMLINE is run by typing
+'
+'      REMLINE [<input> [, <output>]]
+'
+'   where <input> is the name of the file to be processed and <output>
+'   is the name of the file or device to receive the reformatted output.
+'   If no extension is given, .BAS is assumed (except for output devices).
+'   If file names are not given, REMLINE prompts for file names. If both
+'   file names are the same, REMLINE saves the original file with the
+'   extension .BAK.
 '
 '   REMLINE makes several assumptions about the program:
 '
@@ -87,7 +91,7 @@ KeyData:
    ON ERROR GOTO 0
    GenOutFile
    CLOSE #1, #2
-   IF OutputFile$ <> "SCRN:" THEN CLS
+   IF OutputFile$ <> "CON" THEN CLS
 
 END
 
@@ -96,11 +100,10 @@ FileErr1:
    PRINT "      Invalid file name": PRINT
    INPUT "      New input file name (ENTER to terminate): ", InputFile$
    IF InputFile$ = "" THEN END
-
 FileErr2:
    INPUT "      Output file name (ENTER to print to screen) :", OutputFile$
    PRINT
-   IF (OutputFile$ = "") THEN OutputFile$ = "SCRN:"
+   IF (OutputFile$ = "") THEN OutputFile$ = "CON"
    IF TmpFile$ = "" THEN
       RESUME
    ELSE
@@ -198,7 +201,7 @@ SUB GenOutFile STATIC
          END IF
       END IF
       ' Print line to file or console (PRINT is faster than console device)
-      IF OutputFile$ = "SCRN:" THEN
+      IF OutputFile$ = "CON" THEN
          PRINT InLin$
       ELSE
          PRINT #2, InLin$
@@ -209,37 +212,44 @@ END SUB
 
 '
 ' GetFileNames:
-'  Gets a file name by prompting the user.
+'  Gets a file name from COMMAND$ or by prompting the user.
 ' Input:
-'  User input
+'  Used Command$ or user input
 ' Output:
 '  Defines InputFiles$ and OutputFiles$
 '
 SUB GetFileNames STATIC
 
-    CLS
-    PRINT " Microsoft RemLine: Line Number Removal Utility"
-    PRINT "       (.BAS assumed if no extension given)"
-    PRINT
-    INPUT "      Input file name (ENTER to terminate): ", InputFile$
-    IF InputFile$ = "" THEN END
-    INPUT "      Output file name (ENTER to print to screen): ", OutputFile$
-    PRINT
-    IF (OutputFile$ = "") THEN OutputFile$ = "CONS:"
-
+   IF (COMMAND$ = "") THEN
+      CLS
+      PRINT " Microsoft RemLine: Line Number Removal Utility"
+      PRINT "       (.BAS assumed if no extension given)"
+      PRINT
+      INPUT "      Input file name (ENTER to terminate): ", InputFile$
+      IF InputFile$ = "" THEN END
+      INPUT "      Output file name (ENTER to print to screen): ", OutputFile$
+      PRINT
+      IF (OutputFile$ = "") THEN OutputFile$ = "CON"
+   ELSE
+      InputFile$ = UCASE$(GetToken$(COMMAND$, Seps$))
+      OutputFile$ = UCASE$(GetToken$("", Seps$))
+      IF (OutputFile$ = "") THEN
+         INPUT "      Output file name (ENTER to print to screen): ", OutputFile$
+         PRINT
+         IF (OutputFile$ = "") THEN OutputFile$ = "CON"
+      END IF
+   END IF
    IF INSTR(InputFile$, ".") = 0 THEN
       InputFile$ = InputFile$ + ".BAS"
    END IF
-
    IF INSTR(OutputFile$, ".") = 0 THEN
       SELECT CASE OutputFile$
-         CASE "CON", "CONS:", "SCRN:", "SCRN", "PRN", "COM1", "COM2", "LPT1", "LPT2", "LPT3"
+         CASE "CON", "SCRN", "PRN", "COM1", "COM2", "LPT1", "LPT2", "LPT3"
             EXIT SUB
          CASE ELSE
             OutputFile$ = OutputFile$ + ".BAS"
       END SELECT
    END IF
-
    DO WHILE InputFile$ = OutputFile$
       TmpFile$ = LEFT$(InputFile$, INSTR(InputFile$, ".")) + "BAK"
       ON ERROR GOTO FileErr1

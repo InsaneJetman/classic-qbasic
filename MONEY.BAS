@@ -130,8 +130,8 @@ SUB Dointro
     center 8, "€     € €‹‹€ €   € €‹‹‹   €        €     € €  € €   € €  € €‹‹‹€ €‹‹‹ €  ﬂ‹"
 
     COLOR 15
-    center 11, "A Personal Finance Manager writen in"
-    center 12, "Microsoft's QuickBASIC"
+    center 11, "A Personal Finance Manager written in"
+    center 12, "MS-DOS QBasic"
     center 24, "Push Any Key To Continue"
 
     COLOR 13
