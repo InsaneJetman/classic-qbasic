@@ -1,6 +1,8 @@
-' ============================================================================
-'                                 SORTDEMO
-' This program graphically demonstrates six common sorting algorithms.  It
+'
+'   Microsoft SortDemo - Sorting algorithm demonstration program
+'   Copyright (C) Microsoft Corporation 1987-1990
+'
+' SORTDEMO.BAS graphically demonstrates six common sorting algorithms.  It
 ' prints 25 or 43 horizontal bars, all of different lengths and all in random
 ' order, then sorts the bars from smallest to longest.
 '
@@ -14,12 +16,12 @@
 ' a difference in their relative speeds (for example, the exchange
 ' sort may be faster than the shell sort) depending on the number of
 ' elements to be sorted and how "scrambled" they are to begin with.
-' ============================================================================
+'
 
 DEFINT A-Z      ' Default type integer.
 
 ' Declare FUNCTION and SUB procedures, and the number and type of arguments:
-  DECLARE FUNCTION RandInt% (lower, Upper)
+  DECLARE FUNCTION RandInt% (Lower, Upper)
 
   DECLARE SUB BoxInit ()
   DECLARE SUB BubbleSort ()
@@ -69,7 +71,7 @@ DEFINT A-Z      ' Default type integer.
   Initialize             ' Initialize data values.
   SortMenu               ' Print sort menu.
   WIDTH 80, InitRow      ' Restore original number of rows.
-  COLOR 7, 0             ' Restore default color    
+  COLOR 7, 0             ' Restore default color
   CLS
   END
 
@@ -88,23 +90,18 @@ GetRow:
       RESUME NEXT
    END IF
 
-MonoTrap:
-   MaxColors = 2
-   RESUME NEXT
-
 RowTrap:
    MaxRow = 25
    RESUME
 
-' =============================== BoxInit ====================================
+' BoxInit:
 '    Calls the DrawFrame procedure to draw the frame around the sort menu,
 '    then prints the different options stored in the OptionTitle array.
-' ============================================================================
 '
 SUB BoxInit STATIC
    DrawFrame 1, 22, LEFTCOLUMN - 3, 78
 
-   LOCATE 3, LEFTCOLUMN + 2: PRINT "QUICKBASIC SORTING DEMO";
+   LOCATE 3, LEFTCOLUMN + 2: PRINT "QBasic Sorting Demo";
    LOCATE 5
    FOR I = 1 TO NUMOPTIONS - 1
       LOCATE , LEFTCOLUMN: PRINT OptionTitle(I)
@@ -114,7 +111,7 @@ SUB BoxInit STATIC
    ' is down to 1 clock tick:
    IF Pause > 1 THEN LOCATE , LEFTCOLUMN: PRINT OptionTitle(NUMOPTIONS);
 
-   ' Toggle sound on or off, then print the current value for NoSound:
+   ' Turn sound on or off, then print the current value for NoSound:
    NoSound = NOT NoSound
    ToggleSound 12, LEFTCOLUMN + 12
 
@@ -126,11 +123,10 @@ SUB BoxInit STATIC
    PRINT "or ESC key to end program: ";
 END SUB
 
-' ============================== BubbleSort ==================================
+' BubbleSort:
 '    The BubbleSort algorithm cycles through SortArray, comparing adjacent
 '    elements and swapping pairs that are out of order.  It continues to
 '    do this until no pairs are swapped.
-' ============================================================================
 '
 SUB BubbleSort STATIC
    Limit = MaxRow
@@ -153,10 +149,9 @@ SUB BubbleSort STATIC
 
 END SUB
 
-' ============================== CheckScreen =================================
+' CheckScreen:
 '     Checks for type of monitor (VGA, EGA, CGA, or monochrome) and
 '     starting number of screen lines (50, 43, or 25).
-' ============================================================================
 '
 SUB CheckScreen STATIC
 
@@ -166,12 +161,22 @@ SUB CheckScreen STATIC
    ON ERROR GOTO GetRow
    LOCATE InitRow, 1
 
-   ' Try a SCREEN 1 statement to see if the current adapter has color
-   ' graphics; if that causes an error, reset MaxColors to 2:
-   MaxColors = 15
-   ON ERROR GOTO MonoTrap
-   SCREEN 1
-   SCREEN 0
+   ' Determine if monitor is Monochrome or color.
+   LOCATE 1, 1
+   PRINT "x"
+   DEF SEG = &HB000
+   IF PEEK(0) <> ASC("x") THEN
+        MaxColors = 15
+   ELSE
+        LOCATE 1, 1
+        PRINT "y"
+        IF PEEK(0) <> ASC("y") THEN
+            MaxColors = 15
+        ELSE
+            MaxColors = 2
+        END IF
+   END IF
+   DEF SEG
 
    ' See if 43-line mode is accepted; if not, run this program in 25-line
    ' mode:
@@ -181,12 +186,11 @@ SUB CheckScreen STATIC
    ON ERROR GOTO 0              ' Turn off error trapping.
 END SUB
 
-' ============================== DrawFrame ===================================
+' DrawFrame:
 '   Draws a rectangular frame using the high-order ASCII characters É (201) ,
 '   » (187) , È (200) , ¼ (188) , º (186) , and Í (205). The parameters
 '   TopSide, BottomSide, LeftSide, and RightSide are the row and column
 '   arguments for the upper-left and lower-right corners of the frame.
-' ============================================================================
 '
 SUB DrawFrame (TopSide, BottomSide, LeftSide, RightSide) STATIC
    CONST ULEFT = 201, URIGHT = 187, LLEFT = 200, LRIGHT = 188
@@ -203,12 +207,11 @@ SUB DrawFrame (TopSide, BottomSide, LeftSide, RightSide) STATIC
    PRINT CHR$(LLEFT); STRING$(FrameWidth, HORIZONTAL); CHR$(LRIGHT);
 END SUB
 
-' ============================= ElapsedTime ==================================
+' ElapsedTime:
 '    Prints seconds elapsed since the given sorting routine started.
 '    Note that this time includes both the time it takes to redraw the
 '    bars plus the pause while the SOUND statement plays a note, and
 '    thus is not an accurate indication of sorting speed.
-' ============================================================================
 '
 SUB ElapsedTime (CurrentRow) STATIC
    CONST FORMAT = "  &###.### seconds  "
@@ -229,13 +232,12 @@ SUB ElapsedTime (CurrentRow) STATIC
                                     ' background colors.
 END SUB
 
-' ============================= ExchangeSort =================================
+' ExchangeSort:
 '   The ExchangeSort compares each element in SortArray - starting with
 '   the first element - with every following element.  If any of the
 '   following elements is smaller than the current element, it is exchanged
 '   with the current element and the process is repeated for the next
 '   element in SortArray.
-' ============================================================================
 '
 SUB ExchangeSort STATIC
    FOR Row = 1 TO MaxRow
@@ -256,7 +258,7 @@ SUB ExchangeSort STATIC
    NEXT Row
 END SUB
 
-' =============================== HeapSort ===================================
+' HeapSort:
 '  The HeapSort procedure works by calling two other procedures - PercolateUp
 '  and PercolateDown.  PercolateUp turns SortArray into a "heap," which has
 '  the properties outlined in the diagram below:
@@ -282,7 +284,6 @@ END SUB
 '  MaxRow - 1, then swaps the element in SortArray(1) with the element in
 '  MaxRow - 1, rebuilds the heap for MaxRow - 2, and continues in this way
 '  until the array is sorted.
-' ============================================================================
 '
 SUB HeapSort STATIC
    FOR I = 2 TO MaxRow
@@ -296,10 +297,9 @@ SUB HeapSort STATIC
    NEXT I
 END SUB
 
-' ============================== Initialize ==================================
+' Initialize:
 '    Initializes the SortBackup and OptionTitle arrays.  It also calls the
 '    CheckScreen, BoxInit, and RandInt% procedures.
-' ============================================================================
 '
 SUB Initialize STATIC
    DIM TempArray(1 TO 43)
@@ -343,7 +343,7 @@ SUB Initialize STATIC
       END IF
    NEXT I
 
-   FOR I = 1 TO NUMOPTIONS      ' Read SORT DEMO menu options and store
+   FOR I = 1 TO NUMOPTIONS      ' Read SORTDEMO menu options and store
       READ OptionTitle(I)       ' them in the OptionTitle array.
    NEXT I
 
@@ -351,18 +351,17 @@ SUB Initialize STATIC
    Reinitialize         ' Assign values in SortBackup to SortArray and draw
                         ' unsorted bars on the screen.
    NoSound = FALSE
-   Pause = 2            ' Initialize Pause to 2 clock ticks (@ 1/9 second).
+   Pause = 2            ' Initialize Pause to 2 clock ticks (1/9 second).
    BoxInit              ' Draw frame for the sort menu and print options.
 
 END SUB
 
-' ============================= InsertionSort ================================
+' InsertionSort:
 '   The InsertionSort procedure compares the length of each successive
 '   element in SortArray with the lengths of all the preceding elements.
 '   When the procedure finds the appropriate place for the new element, it
 '   inserts the element in its new place, and moves all the other elements
 '   down one place.
-' ============================================================================
 '
 SUB InsertionSort STATIC
    DIM TempVal AS SortType
@@ -392,10 +391,9 @@ SUB InsertionSort STATIC
    NEXT Row
 END SUB
 
-' ============================ PercolateDown =================================
+' PercolateDown:
 '   The PercolateDown procedure restores the elements of SortArray from 1 to
 '   MaxLevel to a "heap" (see the diagram with the HeapSort procedure).
-' ============================================================================
 '
 SUB PercolateDown (MaxLevel) STATIC
    I = 1
@@ -431,10 +429,9 @@ SUB PercolateDown (MaxLevel) STATIC
    LOOP
 END SUB
 
-' ============================== PercolateUp =================================
+' PercolateUp:
 '   The PercolateUp procedure converts the elements from 1 to MaxLevel in
 '   SortArray into a "heap" (see the diagram with the HeapSort procedure).
-' ============================================================================
 '
 SUB PercolateUp (MaxLevel) STATIC
    I = MaxLevel
@@ -460,10 +457,9 @@ SUB PercolateUp (MaxLevel) STATIC
    LOOP
 END SUB
 
-' ============================== PrintOneBar =================================
+' PrintOneBar:
 '  Prints SortArray(Row).BarString at the row indicated by the Row
 '  parameter, using the color in SortArray(Row).ColorVal.
-' ============================================================================
 '
 SUB PrintOneBar (Row) STATIC
    LOCATE Row, 1
@@ -471,14 +467,13 @@ SUB PrintOneBar (Row) STATIC
    PRINT SortArray(Row).BarString;
 END SUB
 
-' ============================== QuickSort ===================================
+' QuickSort:
 '   QuickSort works by picking a random "pivot" element in SortArray, then
 '   moving every element that is bigger to one side of the pivot, and every
 '   element that is smaller to the other side.  QuickSort is then called
 '   recursively with the two subdivisions created by the pivot.  Once the
 '   number of elements in a subdivision reaches two, the recursive calls end
 '   and the array is sorted.
-' ============================================================================
 '
 SUB QuickSort (Low, High)
    IF Low < High THEN
@@ -533,19 +528,17 @@ SUB QuickSort (Low, High)
    END IF
 END SUB
 
-' =============================== RandInt% ===================================
+' RandInt%:
 '   Returns a random integer greater than or equal to the Lower parameter
 '   and less than or equal to the Upper parameter.
-' ============================================================================
 '
-FUNCTION RandInt% (lower, Upper) STATIC
-   RandInt% = INT(RND * (Upper - lower + 1)) + lower
+FUNCTION RandInt% (Lower, Upper) STATIC
+   RandInt% = INT(RND * (Upper - Lower + 1)) + Lower
 END FUNCTION
 
-' ============================== Reinitialize ================================
+' Reinitialize:
 '   Restores the array SortArray to its original unsorted state, then
 '   prints the unsorted color bars.
-' ============================================================================
 '
 SUB Reinitialize STATIC
    FOR I = 1 TO MaxRow
@@ -561,14 +554,13 @@ SUB Reinitialize STATIC
    COLOR MaxColors, 0
 END SUB
 
-' =============================== ShellSort ==================================
+' ShellSort:
 '  The ShellSort procedure is similar to the BubbleSort procedure.  However,
 '  ShellSort begins by comparing elements that are far apart (separated by
 '  the value of the Offset variable, which is initially half the distance
 '  between the first and last element), then comparing elements that are
 '  closer together (when Offset is one, the last iteration of this procedure
 '  is merely a bubble sort).
-' ============================================================================
 '
 SUB ShellSort STATIC
 
@@ -598,16 +590,15 @@ SUB ShellSort STATIC
    LOOP
 END SUB
 
-' =============================== SortMenu ===================================
+' SortMenu:
 '   The SortMenu procedure first calls the Reinitialize procedure to make
 '   sure the SortArray is in its unsorted form, then prompts the user to
 '   make one of the following choices:
 '
 '               * One of the sorting algorithms
-'               * Toggle sound on or off
+'               * Turn sound on or off
 '               * Increase or decrease speed
 '               * End the program
-' ============================================================================
 '
 SUB SortMenu STATIC
    Escape$ = CHR$(27)
@@ -632,7 +623,7 @@ SUB SortMenu STATIC
          StartTime = TIMER                 ' Record the starting time.
       END IF
 
-      ' Branch to the appropriate procedure depending on the key typed:
+      ' Branch to the appropriate procedure depending on the key pressed:
       SELECT CASE Choice$
          CASE "I"
             InsertionSort
@@ -652,6 +643,7 @@ SUB SortMenu STATIC
             ' the menu to clear any timing results (since they won't compare
             ' with future results):
             Pause = (2 * Pause) / 3
+
             BoxInit
 
          CASE "<"
@@ -659,7 +651,7 @@ SUB SortMenu STATIC
             ' Increase pause length to slow down sorting time, then redraw
             ' the menu to clear any timing results (since they won't compare
             ' with future results):
-            Pause = (3 * Pause) / 2
+            IF (3 * Pause) / 2 < 13000 THEN Pause = (3 * Pause) / 2
             BoxInit
 
          CASE "T"
@@ -686,10 +678,9 @@ SUB SortMenu STATIC
 
 END SUB
 
-' =============================== SwapBars ===================================
+' SwapBars:
 '   Calls PrintOneBar twice to switch the two bars in Row1 and Row2,
 '   then calls the ElapsedTime procedure.
-' ============================================================================
 '
 SUB SwapBars (Row1, Row2) STATIC
    PrintOneBar Row1
@@ -697,10 +688,9 @@ SUB SwapBars (Row1, Row2) STATIC
    ElapsedTime Row1
 END SUB
 
-' ============================== ToggleSound =================================
+' ToggleSound:
 '   Reverses the current value for NoSound, then prints that value next
 '   to the "Toggle Sound" option on the sort menu.
-' ============================================================================
 '
 SUB ToggleSound (Row, Column) STATIC
    NoSound = NOT NoSound
