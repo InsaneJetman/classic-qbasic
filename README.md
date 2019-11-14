@@ -1,8 +1,8 @@
 # QBasic Examples
-QBasic example programs that came with MS-DOS v5.00.409c (beta)
+QBasic example programs that came with MS-DOS v5.00
 
 ### Gorillas
-`CATAPULT.BAS`: an [artillery](https://en.wikipedia.org/wiki/Artillery_game) game
+`GORILLA.BAS`: an [artillery](https://en.wikipedia.org/wiki/Artillery_game) game
 
 ### Money Manager
 `MONEY.BAS`: a personal finance manager

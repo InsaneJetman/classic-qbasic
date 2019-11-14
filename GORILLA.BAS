@@ -1,17 +1,27 @@
-'                         Q B a s i c   G o r r i l l a s
+'                         Q B a s i c   G o r i l l a s
 '
 '                   Copyright (C) Microsoft Corporation 1990
+'
+' Your mission is to hit your opponent with the exploding banana
+' by varying the angle and power of your throw, taking into account
+' wind speed, gravity, and the city skyline.
+'
+' Speed of this game is determined by the constant SPEEDCONST.  If the
+' program is too slow or too fast adjust the "CONST SPEEDCONST = 500" line
+' below.  The larger the number the faster the game will go.
+'
+' To run this game, press Shift+F5.
+'
+' To exit QBasic, press Alt, F, X.
+'
+' To get help on a BASIC keyword, move the cursor to the keyword and press
+' F1 or click the right mouse button.
+'
 
-'Speed of this program is determined by the constant SPEEDCONST.
-'If the program is too slow or too fast adjust this line:
-'CONST SPEEDCONST = 400
-'The larger the number the faster the game will go.
-
+'Set default data type to integer for faster game play
 DEFINT A-Z
 
 'Sub Declarations
-DECLARE FUNCTION Scl (n!)
-DECLARE FUNCTION GetNum# (Row, Col)
 DECLARE SUB DoSun (Mouth)
 DECLARE SUB SetScreen ()
 DECLARE SUB EndGame ()
@@ -24,17 +34,18 @@ DECLARE SUB DoExplosion (x#, y#)
 DECLARE SUB MakeCityScape (BCoor() AS ANY)
 DECLARE SUB PlaceGorillas (BCoor() AS ANY)
 DECLARE SUB UpdateScores (Record(), PlayerNum, Results)
-DECLARE FUNCTION DoShot (PlayerNum, x, y)
-DECLARE FUNCTION ExplodeGorilla (x#, y#)
-DECLARE FUNCTION Getn# (Row, Col)
-DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
 DECLARE SUB DrawGorilla (x, y, arms)
 DECLARE SUB GorillaIntro (Player1$, Player2$)
 DECLARE SUB Rest (t#)
 DECLARE SUB VictoryDance (Player)
 DECLARE SUB ClearGorillas ()
-DECLARE SUB DoBan (x, y)
 DECLARE SUB DrawBan (xc#, yc#, r, bc)
+DECLARE FUNCTION Scl (n!)
+DECLARE FUNCTION GetNum# (Row, Col)
+DECLARE FUNCTION DoShot (PlayerNum, x, y)
+DECLARE FUNCTION ExplodeGorilla (x#, y#)
+DECLARE FUNCTION Getn# (Row, Col)
+DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
 DECLARE FUNCTION CalcDelay! ()
 
 'Make all arrays Dynamic
@@ -47,7 +58,7 @@ TYPE XYPoint
 END TYPE
 
 'Constants
-CONST SPEEDCONST = 400
+CONST SPEEDCONST = 500
 CONST TRUE = -1
 CONST FALSE = NOT TRUE
 CONST HITSELF = 1
@@ -72,7 +83,7 @@ DIM SHARED GorD&(120)        'Graphical picture of Gorilla arms down
 DIM SHARED GorL&(120)        'Gorilla left arm raised
 DIM SHARED GorR&(120)        'Gorilla right arm raised
 
-DIM SHARED Gravity#
+DIM SHARED gravity#
 DIM SHARED Wind
 
 'Screen Mode Variables
@@ -91,15 +102,25 @@ DIM SHARED SunHt
 DIM SHARED GHeight
 DIM SHARED MachSpeed AS SINGLE
 
-DEF FnRan (x) = INT(RND(1) * x) + 1
+  DEF FnRan (x) = INT(RND(1) * x) + 1
+  DEF SEG = 0                         ' Set NumLock to ON
+  KeyFlags = PEEK(1047)
+  IF (KeyFlags AND 32) = 0 THEN
+    POKE 1047, KeyFlags OR 32
+  END IF
+  DEF SEG
 
   GOSUB InitVars
   Intro
   GetInputs Name1$, Name2$, NumGames
   GorillaIntro Name1$, Name2$
   PlayGame Name1$, Name2$, NumGames
-  EndGame
+ 
+  DEF SEG = 0                         ' Restore NumLock state
+  POKE 1047, KeyFlags
+  DEF SEG
 END
+
 
 CGABanana:
   'BananaLeft
@@ -128,7 +149,10 @@ InitVars:
   ON ERROR GOTO ScreenModeError
   Mode = 9
   SCREEN Mode
+  ON ERROR GOTO PaletteError
+  IF Mode = 9 THEN PALETTE 4, 0   'Check for 64K EGA
   ON ERROR GOTO 0
+
   MachSpeed = CalcDelay
 
   IF Mode = 9 THEN
@@ -154,8 +178,8 @@ InitVars:
       READ RBan&(i)
     NEXT i
 
-    MaxCol = 80
     SunHt = 39
+
   ELSE
 
     ScrWidth = 320
@@ -179,22 +203,28 @@ InitVars:
     NEXT i
 
     MachSpeed = MachSpeed * 1.3
-    MaxCol = 40
     SunHt = 20
   END IF
 RETURN
 
 ScreenModeError:
   IF Mode = 1 THEN
-    PRINT "Sorry, you must have CGA, EGA, or VGA graphics to play GORILLAS"
+    CLS
+    LOCATE 10, 5
+    PRINT "Sorry, you must have CGA, EGA color, or VGA graphics to play GORILLA.BAS"
     END
   ELSE
     Mode = 1
     RESUME
   END IF
 
+PaletteError:
+  Mode = 1            '64K EGA cards will run in CGA mode.
+  RESUME NEXT
+
 REM $STATIC
-'CalcDelay: Checks speed of the machine.
+'CalcDelay:
+'  Checks speed of the machine.
 FUNCTION CalcDelay!
 
   s! = TIMER
@@ -337,14 +367,13 @@ SUB DoSun (Mouth)
 
 END SUB
 
-'  DoBan:
-'     Draws the banana
-'  Parameters:
-'     xc# - Horizontal Coordinate
-'     yc# - Vertical Coordinate
-'     r - rotation position (0-3). (  \_/  ) /-\
-'     bc - if TRUE then DrawBan draws the banana ELSE it erases the banana.
-'
+'DrawBan:
+'  Draws the banana
+'Parameters:
+'  xc# - Horizontal Coordinate
+'  yc# - Vertical Coordinate
+'  r - rotation position (0-3). (  \_/  ) /-\
+'  bc - if TRUE then DrawBan draws the banana ELSE it erases the banana
 SUB DrawBan (xc#, yc#, r, bc)
 
 SELECT CASE r
@@ -360,16 +389,14 @@ END SELECT
 
 END SUB
 
-'  DrawGorilla:
-'     Draws the Gorilla in either CGA or EGA mode
-'     and saves the graphics data in an array.
-'  Parameters:
-'     x - x coordinate of gorilla
-'     y - y coordinate of the gorilla
-'     arms - either Left up, Right up, or both down
-'
+'DrawGorilla:
+'  Draws the Gorilla in either CGA or EGA mode
+'  and saves the graphics data in an array.
+'Parameters:
+'  x - x coordinate of gorilla
+'  y - y coordinate of the gorilla
+'  arms - either Left up, Right up, or both down
 SUB DrawGorilla (x, y, arms)
-
   DIM i AS SINGLE   ' Local index must be single precision
 
   'draw head
@@ -425,22 +452,11 @@ SUB DrawGorilla (x, y, arms)
   NEXT i
 END SUB
 
-' EndGame:
-'   Cleans screen up after game is over
-SUB EndGame
-  SCREEN 0
-  WIDTH 80
-  COLOR 15, 0
-  CLS
-END SUB
-
-' ExplodeGorilla:
-'   Causes gorilla explosion when a direct hit occurs
-' Parameters:
-'   X#, Y# - shot location
-'
+'ExplodeGorilla:
+'  Causes gorilla explosion when a direct hit occurs
+'Parameters:
+'  X#, Y# - shot location
 FUNCTION ExplodeGorilla (x#, y#)
-
   YAdj = Scl(12)
   XAdj = Scl(5)
   SclX# = ScrWidth / 320
@@ -465,60 +481,55 @@ FUNCTION ExplodeGorilla (x#, y#)
   NEXT i
 
   ExplodeGorilla = PlayerHit
-
 END FUNCTION
 
-' GetInputs:
-'   Gets user inputs at beginning of game
-' Parameters:
-'   Player1$, Player2$ - player names
-'   NumGames - number of games to play
-'
+'GetInputs:
+'  Gets user inputs at beginning of game
+'Parameters:
+'  Player1$, Player2$ - player names
+'  NumGames - number of games to play
 SUB GetInputs (Player1$, Player2$, NumGames)
-
-  SCREEN 0
-  WIDTH 80
-
-  COLOR 14, 1
+  COLOR 7, 0
   CLS
 
-  DO
-    LOCATE 8, 30
-    LINE INPUT "Name of Player 1: "; Player1$
-  LOOP UNTIL Player1$ <> ""
-  Player1$ = LEFT$(Player1$, 10)
+  LOCATE 8, 15
+  LINE INPUT "Name of Player 1 (Default = 'Player 1'): "; Player1$
+  IF Player1$ = "" THEN
+    Player1$ = "Player 1"
+  ELSE
+    Player1$ = LEFT$(Player1$, 10)
+  END IF
+
+  LOCATE 10, 15
+  LINE INPUT "Name of Player 2 (Default = 'Player 2'): "; Player2$
+  IF Player2$ = "" THEN
+    Player2$ = "Player 2"
+  ELSE
+    Player2$ = LEFT$(Player2$, 10)
+  END IF
 
   DO
-    LOCATE 10, 30
-    LINE INPUT "Name of Player 2: "; Player2$
-  LOOP UNTIL Player2$ <> ""
-  Player2$ = LEFT$(Player2$, 10)
-
-  LOCATE 12, 26
-  INPUT "Play to how many total points "; NumGames
-  IF NumGames < 1 THEN NumGames = 1
+    LOCATE 12, 56: PRINT SPACE$(25);
+    LOCATE 12, 13
+    INPUT "Play to how many total points (Default = 3)"; game$
+    NumGames = VAL(LEFT$(game$, 2))
+  LOOP UNTIL NumGames > 0 AND LEN(game$) < 3 OR LEN(game$) = 0
+  IF NumGames = 0 THEN NumGames = 3
 
   DO
-    LOCATE 14, 22
+    LOCATE 14, 53: PRINT SPACE$(28);
+    LOCATE 14, 17
     INPUT "Gravity in Meters/Sec (Earth = 9.8)"; grav$
-
-    IF grav$ = "" OR VAL(grav$) = 0 THEN
-      Gravity# = 9.8
-    ELSE
-      Gravity# = VAL(grav$)
-    END IF
-
-  LOOP UNTIL Gravity# > 0
-
+    gravity# = VAL(grav$)
+  LOOP UNTIL gravity# > 0 OR LEN(grav$) = 0
+  IF gravity# = 0 THEN gravity# = 9.8
 END SUB
 
-' GetNum:
-'   Gets valid numeric input from user
-' Parameters:
-'   Row, Col - location to echo input
-'
+'GetNum:
+'  Gets valid numeric input from user
+'Parameters:
+'  Row, Col - location to echo input
 FUNCTION GetNum# (Row, Col)
-
   Result$ = ""
   Done = FALSE
   WHILE INKEY$ <> "": WEND   'Clear keyboard buffer
@@ -526,7 +537,7 @@ FUNCTION GetNum# (Row, Col)
   DO WHILE NOT Done
 
     LOCATE Row, Col
-    PRINT Result$; CHR$(95); " ";
+    PRINT Result$; CHR$(95); "    ";
 
     Kbd$ = INKEY$
     SELECT CASE Kbd$
@@ -537,7 +548,11 @@ FUNCTION GetNum# (Row, Col)
           Result$ = Result$ + Kbd$
         END IF
       CASE CHR$(13)
-        Done = TRUE
+        IF VAL(Result$) > 360 THEN
+          Result$ = ""
+        ELSE
+          Done = TRUE
+        END IF
       CASE CHR$(8)
         IF LEN(Result$) > 0 THEN
           Result$ = LEFT$(Result$, LEN(Result$) - 1)
@@ -553,17 +568,16 @@ FUNCTION GetNum# (Row, Col)
   PRINT Result$; " ";
 
   GetNum# = VAL(Result$)
-
 END FUNCTION
 
-' GorillaIntro:
-'   Displays gorillas on screen for the first time
-'   allows the graphical data to be put into an array
-' Parameters:
-'   Player1$, Player2$ - The names of the players
+'GorillaIntro:
+'  Displays gorillas on screen for the first time
+'  allows the graphical data to be put into an array
+'Parameters:
+'  Player1$, Player2$ - The names of the players
 '
 SUB GorillaIntro (Player1$, Player2$)
-
+  LOCATE 16, 34: PRINT "--------------"
   LOCATE 18, 34: PRINT "V = View Intro"
   LOCATE 19, 34: PRINT "P = Play Game"
   LOCATE 21, 35: PRINT "Your Choice?"
@@ -583,28 +597,28 @@ SUB GorillaIntro (Player1$, Player2$)
   SCREEN Mode
   SetScreen
 
-  IF UCASE$(Char$) = "V" THEN
-    Center 2, "Q B A S I C   G O R I L L A S"
-    Center 5, "STARRING:"
-    P$ = Player1$ + " AND " + Player2$
-    Center 7, P$
-  END IF
+  IF Mode = 1 THEN Center 5, "Please wait while gorillas are drawn."
 
   VIEW PRINT 9 TO 24
 
-  PALETTE OBJECTCOLOR, BackColor
-
+  IF Mode = 9 THEN PALETTE OBJECTCOLOR, BackColor
+ 
   DrawGorilla x, y, ARMSDOWN
   CLS 2
   DrawGorilla x, y, LEFTUP
   CLS 2
   DrawGorilla x, y, RIGHTUP
   CLS 2
-
+ 
   VIEW PRINT 1 TO 25
-  IF Mode = 1 THEN PALETTE OBJECTCOLOR, 4 ELSE PALETTE OBJECTCOLOR, 46
-
+  IF Mode = 9 THEN PALETTE OBJECTCOLOR, 46
+ 
   IF UCASE$(Char$) = "V" THEN
+    Center 2, "Q B A S I C   G O R I L L A S"
+    Center 5, "             STARRING:               "
+    P$ = Player1$ + " AND " + Player2$
+    Center 7, P$
+
     PUT (x - 13, y), GorD&, PSET
     PUT (x + 47, y), GorD&, PSET
     Rest 1
@@ -640,36 +654,38 @@ SUB GorillaIntro (Player1$, Player2$)
       Rest .1
     NEXT
   END IF
-
 END SUB
 
-' Intro:
-'   Displays game introduction
+'Intro:
+'  Displays game introduction
 SUB Intro
-  SCREEN 0
-  WIDTH 80
-  MaxCol = 80
-  COLOR 9, 1
-  CLS
-  Center 8, "Q B a s i c    G O R I L L A S"
-  COLOR 14
-  Center 10, "Your mission is to hit your opponent with the"
-  Center 11, "exploding banana by varying the angle and power"
-  Center 12, "of your throw, taking into account wind speed,"
-  Center 13, "gravity and the skyline."
 
-  COLOR 15
-  PLAY "T160O1L8CDEDCDL4ECC"
-  Center 24, "Push any key to continue"
+  SCREEN 0
+  WIDTH 80, 25
+  MaxCol = 80
+  COLOR 15, 0
+  CLS
+
+  Center 4, "Q B a s i c    G O R I L L A S"
+  COLOR 7
+  Center 6, "Copyright (C) Microsoft Corporation 1990"
+  Center 8, "Your mission is to hit your opponent with the exploding"
+  Center 9, "banana by varying the angle and power of your throw, taking"
+  Center 10, "into account wind speed, gravity, and the city skyline."
+  Center 11, "The wind speed is shown by a directional arrow at the bottom"
+  Center 12, "of the playing field, its length relative to its strength."
+  Center 24, "Press any key to continue"
+
+  PLAY "MBT160O1L8CDEDCDL4ECC"
   SparklePause
   IF Mode = 1 THEN MaxCol = 40
 END SUB
 
-' MakeCityScape:
-'   Creates random skyline for game
-' Parameters:
-'   BCoor() - a user-defined type array which stores the coordinates of
-'   the upper left corner of each building.
+'MakeCityScape:
+'  Creates random skyline for game
+'Parameters:
+'  BCoor() - a user-defined type array which stores the coordinates of
+'  the upper left corner of each building.
 SUB MakeCityScape (BCoor() AS XYPoint)
 
   x = 2
@@ -791,12 +807,12 @@ SUB MakeCityScape (BCoor() AS XYPoint)
   END IF
 END SUB
 
-'  PlaceGorillas:
-'    PUTs the Gorillas on top of the buildings.  Must have drawn
-'    Gorillas first.
-'  Parameters:
-'    BCoor() - user-defined TYPE array which stores upper left coordinates
-'    of each building.
+'PlaceGorillas:
+'  PUTs the Gorillas on top of the buildings.  Must have drawn
+'  Gorillas first.
+'Parameters:
+'  BCoor() - user-defined TYPE array which stores upper left coordinates
+'  of each building.
 SUB PlaceGorillas (BCoor() AS XYPoint)
     
   IF Mode = 9 THEN
@@ -821,11 +837,11 @@ SUB PlaceGorillas (BCoor() AS XYPoint)
 
 END SUB
 
-' PlayGame:
-'   Main game play routine
-' Parameters:
-'   Player1$, Player2$ - player names
-'   NumGames - number of games to play
+'PlayGame:
+'  Main game play routine
+'Parameters:
+'  Player1$, Player2$ - player names
+'  NumGames - number of games to play
 SUB PlayGame (Player1$, Player2$, NumGames)
   DIM BCoor(0 TO 30) AS XYPoint
   DIM TotalWins(1 TO 2)
@@ -861,26 +877,28 @@ SUB PlayGame (Player1$, Player2$, NumGames)
   NEXT i
 
   SCREEN 0
-  WIDTH 80
+  WIDTH 80, 25
+  COLOR 7, 0
   MaxCol = 80
-  COLOR 14, 1
   CLS
+
   Center 8, "GAME OVER!"
   Center 10, "Score:"
-  LOCATE 11, 34: PRINT Player1$; TAB(50); TotalWins(1)
-  LOCATE 12, 34: PRINT Player2$; TAB(50); TotalWins(2)
-  Center 24, "Push any key to continue"
-  COLOR 14
+  LOCATE 11, 30: PRINT Player1$; TAB(50); TotalWins(1)
+  LOCATE 12, 30: PRINT Player2$; TAB(50); TotalWins(2)
+  Center 24, "Press any key to continue"
   SparklePause
+  COLOR 7, 0
+  CLS
 END SUB
 
-' PlayGame:
-'   Plots banana shot across the screen
-' Parameters:
-'   StartX, StartY - starting shot location
-'   Angle - shot angle
-'   Velocity - shot velocity
-'   PlayerNum - the banana thrower
+'PlayGame:
+'  Plots banana shot across the screen
+'Parameters:
+'  StartX, StartY - starting shot location
+'  Angle - shot angle
+'  Velocity - shot velocity
+'  PlayerNum - the banana thrower
 FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
 
   Angle# = Angle# / 180 * pi#  'Convert degree angle to radians
@@ -943,7 +961,7 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
   END IF
 
   x# = StartXPos + (InitXVel# * t#) + (.5 * (Wind / 5) * t# ^ 2)
-  y# = StartYPos + ((-1 * (InitYVel# * t#)) + (.5 * Gravity# * t# ^ 2)) * (ScrHeight / 350)
+  y# = StartYPos + ((-1 * (InitYVel# * t#)) + (.5 * gravity# * t# ^ 2)) * (ScrHeight / 350)
          
   IF (x# >= ScrWidth - Scl(10)) OR (x# <= 3) OR (y# >= ScrHeight - 3) THEN
     OnScreen = FALSE
@@ -1001,20 +1019,20 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
 
 END FUNCTION
 
-' Rest:
-'   pauses the program
+'Rest:
+'  pauses the program
 SUB Rest (t#)
-    s# = TIMER
-    t2# = MachSpeed * t# / SPEEDCONST
-    DO
-    LOOP UNTIL TIMER - s# > t2#
+  s# = TIMER
+  t2# = MachSpeed * t# / SPEEDCONST
+  DO
+  LOOP UNTIL TIMER - s# > t2#
 END SUB
 
-' Scl:
-' Pass the number in to scaling for cga.  If the number is a decimal, then we
-' want to scale down for cga or scale up for ega.  This allows a full range
-' of numbers to be generated for scaling.
-' (i.e. for 3 to get scaled to 1, pass in 2.9)
+'Scl:
+'  Pass the number in to scaling for cga.  If the number is a decimal, then we
+'  want to scale down for cga or scale up for ega.  This allows a full range
+'  of numbers to be generated for scaling.
+'  (i.e. for 3 to get scaled to 1, pass in 2.9)
 FUNCTION Scl (n!)
 
   IF n! <> INT(n!) THEN
@@ -1028,8 +1046,8 @@ FUNCTION Scl (n!)
 
 END FUNCTION
 
-' SetScreen:
-'   Sets the appropriate palette statements
+'SetScreen:
+'  Sets the appropriate color statements
 SUB SetScreen
 
   IF Mode = 9 THEN
@@ -1044,55 +1062,53 @@ SUB SetScreen
     PALETTE 7, 3
     PALETTE 9, 63       'Display Color
   ELSE
-    ExplosionColor = 3
+    ExplosionColor = 2
     BackColor = 0
-    PALETTE 0, 0
-    PALETTE 1, 4
-    PALETTE 2, 7
-    PALETTE 3, 14
+    COLOR BackColor, 2
+
   END IF
 
 END SUB
 
-' SparklePause:
-'   Creates flashing border for intro and game over screens
+'SparklePause:
+'  Creates flashing border for intro and game over screens
 SUB SparklePause
 
-  COLOR 15, 1
-  a$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
+  COLOR 4, 0
+  A$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
   WHILE INKEY$ <> "": WEND 'Clear keyboard buffer
 
   WHILE INKEY$ = ""
-    FOR a = 1 TO 5
-      LOCATE 1, 1
-      PRINT MID$(a$, a, 80);
-      LOCATE 20, 1
-      PRINT MID$(a$, 6 - a, 80);
+    FOR A = 1 TO 5
+      LOCATE 1, 1                             'print horizontal sparkles
+      PRINT MID$(A$, A, 80);
+      LOCATE 22, 1
+      PRINT MID$(A$, 6 - A, 80);
 
-      FOR b = 2 TO 19
-        c = (a + b) MOD 5
+      FOR b = 2 TO 21                         'Print Vertical sparkles
+        c = (A + b) MOD 5
         IF c = 1 THEN
           LOCATE b, 80
           PRINT "*";
-          LOCATE 21 - b, 1
+          LOCATE 23 - b, 1
           PRINT "*";
         ELSE
           LOCATE b, 80
           PRINT " ";
-          LOCATE 21 - b, 1
+          LOCATE 23 - b, 1
           PRINT " ";
         END IF
       NEXT b
-    NEXT a
+    NEXT A
   WEND
 END SUB
 
-' UpdateScores:
-'   Updates players' scores
-' Parameters:
-'   Record - players' scores
-'   PlayerNum - player
-'   Results - results of player's shot
+'UpdateScores:
+'  Updates players' scores
+'Parameters:
+'  Record - players' scores
+'  PlayerNum - player
+'  Results - results of player's shot
 SUB UpdateScores (Record(), PlayerNum, Results)
   IF Results = HITSELF THEN
     Record(ABS(PlayerNum - 3)) = Record(ABS(PlayerNum - 3)) + 1
@@ -1101,10 +1117,10 @@ SUB UpdateScores (Record(), PlayerNum, Results)
   END IF
 END SUB
 
-'  VictoryDance:
-'    gorilla dances after he has eliminated his opponent
-'  Parameters:
-'    Player - which gorilla is dancing
+'VictoryDance:
+'  gorilla dances after he has eliminated his opponent
+'Parameters:
+'  Player - which gorilla is dancing
 SUB VictoryDance (Player)
 
   FOR i# = 1 TO 4
