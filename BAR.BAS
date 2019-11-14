@@ -23,13 +23,11 @@ DO
 LOOP WHILE NewGraph$ = "Y"
 
 END
-REM $STATIC
-'
-' ========================== DRAWGRAPH =========================
-'   Draws a bar graph from the data entered in the INPUTTITLES
-'   and INPUTDATA procedures.
-' ==============================================================
-'
+
+' ======================== DRAWGRAPH ======================
+'   Draws a bar graph from the data entered in the
+'   INPUTTITLES and INPUTDATA procedures.
+' =========================================================
 FUNCTION DrawGraph$ (T AS TitleType, Label$(), Value(), N%) STATIC
 
    ' Set size of graph:
@@ -37,7 +35,7 @@ FUNCTION DrawGraph$ (T AS TitleType, Label$(), Value(), N%) STATIC
    CONST GRAPHLEFT = 48, GRAPHRIGHT = 624
    CONST YLENGTH = GRAPHBOTTOM - GRAPHTOP
 
-   ' Calculate max/min values:
+   ' Calculate maximum and minimum values:
    YMax = 0
    YMin = 0
    FOR I% = 1 TO N%
@@ -53,7 +51,7 @@ FUNCTION DrawGraph$ (T AS TitleType, Label$(), Value(), N%) STATIC
    SCREEN 2
    CLS
 
-   ' Draw y axis:
+   ' Draw y-axis:
    LINE (GRAPHLEFT, GRAPHTOP)-(GRAPHLEFT, GRAPHBOTTOM), 1
 
    ' Draw main graph title:
@@ -61,14 +59,14 @@ FUNCTION DrawGraph$ (T AS TitleType, Label$(), Value(), N%) STATIC
    LOCATE 2, Start%
    PRINT RTRIM$(T.MainTitle);
 
-   ' Annotate Y axis:
+   ' Annotate y-axis:
    Start% = CINT(13 - LEN(RTRIM$(T.YTitle)) / 2)
    FOR I% = 1 TO LEN(RTRIM$(T.YTitle))
       LOCATE Start% + I% - 1, 1
       PRINT MID$(T.YTitle, I%, 1);
    NEXT I%
 
-   ' Calculate scale factor so labels aren't bigger than 4 digits:
+   ' Calculate scale factor so labels aren't bigger than four digits:
    IF ABS(YMax) > ABS(YMin) THEN
       Power = YMax
    ELSE
@@ -77,41 +75,39 @@ FUNCTION DrawGraph$ (T AS TitleType, Label$(), Value(), N%) STATIC
    Power = CINT(LOG(ABS(Power) / 100) / LOG(10))
    IF Power < 0 THEN Power = 0
 
-   ' Scale min and max down:
+   ' Scale minimum and maximum values down:
    ScaleFactor = 10 ^ Power
    YMax = CINT(YMax / ScaleFactor)
    YMin = CINT(YMin / ScaleFactor)
-
    ' If power isn't zero then put scale factor on chart:
    IF Power <> 0 THEN
       LOCATE 3, 2
       PRINT "x 10^"; LTRIM$(STR$(Power))
    END IF
 
-   ' Put tic mark and number for Max point on Y axis:
-   LINE (GRAPHLEFT - 3, GRAPHTOP)-STEP(3, 0)
+   ' Put tic mark and number for Max point on y-axis:
+   LINE (GRAPHLEFT - 3, GRAPHTOP) -STEP(3, 0)
    LOCATE 4, 2
    PRINT USING "####"; YMax
 
-   ' Put tic mark and number for Min point on Y axis:
-   LINE (GRAPHLEFT - 3, GRAPHBOTTOM)-STEP(3, 0)
+   ' Put tic mark and number for Min point on y-axis:
+   LINE (GRAPHLEFT - 3, GRAPHBOTTOM) -STEP(3, 0)
    LOCATE 22, 2
    PRINT USING "####"; YMin
 
-   ' Scale min and max back up for charting calculations:
-   YMax = YMax * ScaleFactor
-   YMin = YMin * ScaleFactor
+   YMax = YMax * ScaleFactor ' Scale minimum and maximum back
+   YMin = YMin * ScaleFactor ' up for charting calculations.
 
-   ' Annotate X axis:
+   ' Annotate x-axis:
    Start% = 44 - (LEN(RTRIM$(T.XTitle)) / 2)
    LOCATE 25, Start%
    PRINT RTRIM$(T.XTitle);
 
-   ' Calculate the pixel range for the Y axis:
+   ' Calculate the pixel range for the y-axis:
    YRange = YMax - YMin
 
    ' Define a diagonally striped pattern:
-   Tile$ = CHR$(1) + CHR$(2) + CHR$(4) + CHR$(8) + CHR$(16) + CHR$(32) + CHR$(64) + CHR$(128)
+   Tile$ = CHR$(1)+CHR$(2)+CHR$(4)+CHR$(8)+CHR$(16)+CHR$(32)+CHR$(64)+CHR$(128)
 
    ' Draw a zero line if appropriate:
    IF YMin < 0 THEN
@@ -122,9 +118,8 @@ FUNCTION DrawGraph$ (T AS TitleType, Label$(), Value(), N%) STATIC
       Bottom = GRAPHBOTTOM
    END IF
 
-   ' Draw x axis:
+   ' Draw x-axis:
    LINE (GRAPHLEFT - 3, Bottom)-(GRAPHRIGHT, Bottom)
-
    ' Draw bars and labels:
    Start% = GRAPHLEFT + (BarSpace / 2)
    FOR I% = 1 TO N%
@@ -137,22 +132,20 @@ FUNCTION DrawGraph$ (T AS TitleType, Label$(), Value(), N%) STATIC
 
       ' Draw the bar and fill it with the striped pattern:
       BarHeight = (Value(I%) / YRange) * YLENGTH
-      LINE (Start%, Bottom)-STEP(BarWidth, -BarHeight), , B
+      LINE (Start%, Bottom) -STEP(BarWidth, -BarHeight), , B
       PAINT (BarMid, Bottom - (BarHeight / 2)), Tile$, 1
 
       Start% = Start% + BarWidth + BarSpace
    NEXT I%
-
-   LOCATE 1, 1, 1
+   LOCATE 1, 1
    PRINT "New graph? ";
    DrawGraph$ = UCASE$(INPUT$(1))
 
 END FUNCTION
-'
-' ========================= INPUTDATA ========================
-'         Gets input for the bar labels and their values
-' ============================================================
-'
+
+' ======================== INPUTDATA ======================
+'     Gets input for the bar labels and their values
+' =========================================================
 FUNCTION InputData% (Label$(), Value()) STATIC
 
    ' Initialize the number of data values:
@@ -178,14 +171,14 @@ FUNCTION InputData% (Label$(), Value()) STATIC
 
       ' Only input value if label isn't blank:
       IF Label$(NumData%) <> "" THEN
-         LOCATE , 35
-         INPUT "Value? ", Value(NumData%)
+	 LOCATE , 35
+	 INPUT "Value? ", Value(NumData%)
 
-      ' If label was blank, decrement data counter and
-      ' set Done flag equal to TRUE:
+      ' If label is blank, decrement data counter
+      ' and set Done flag equal to TRUE:
       ELSE
-         NumData% = NumData% - 1
-         Done% = TRUE
+	 NumData% = NumData% - 1
+	 Done% = TRUE
       END IF
    LOOP UNTIL (NumData% = 5) OR Done%
 
@@ -193,22 +186,17 @@ FUNCTION InputData% (Label$(), Value()) STATIC
    InputData% = NumData%
 
 END FUNCTION
-'
-' ======================= INPUTTITLES ========================
-'       Accepts input for the three different graph titles
-' ============================================================
-'
+
+' ====================== INPUTTITLES ======================
+'     Accepts input for the three different graph titles
+' =========================================================
 SUB InputTitles (T AS TitleType) STATIC
-
-   ' Set text screen:
-   SCREEN 0, 0
-
-   ' Input Titles
-   DO
+   SCREEN 0, 0		' Set text screen.
+   DO			' Input titles.
       CLS
       INPUT "Enter main graph title: ", T.MainTitle
-      INPUT "Enter X-Axis title    : ", T.XTitle
-      INPUT "Enter Y-Axis title    : ", T.YTitle
+      INPUT "Enter x-axis title    : ", T.XTitle
+      INPUT "Enter y-axis title    : ", T.YTitle
 
       ' Check to see if titles are OK:
       LOCATE 7, 1
@@ -217,3 +205,4 @@ SUB InputTitles (T AS TitleType) STATIC
       OK$ = UCASE$(INPUT$(1))
    LOOP UNTIL OK$ = "Y"
 END SUB
+

@@ -1,161 +1,200 @@
-# QuickBASIC 4.5 Examples
+# QuickBASIC Extended 7.1 Examples
 Demonstration and utility programs written in BASIC.
 
-### DEMO1.BAS
-A BASICA version of a sound-effects demonstration program.
+## Library Include Files
 
-### DEMO2.BAS
-The QuickBASIC 2.0 version of DEMO1.BAS.
+### FINANC.BI
+Include file for Financial functions
 
-### DEMO3.BAS
-The QuickBASIC 4.0 (and higher) version of DEMO1.BAS.
+### DATIM.BI
+Include file for Date/Time functions
 
-### QCARDS.BAS
-Supplied code for the QCARDS database program used in the Hands On with QuickBASIC tutorial. In Part 2 of the manual Learning to Use QuickBASIC, you add the module-level code that completes this program.
+### FORMAT.BI
+Include file for Format functions
 
-### QCARDS.DAT
-Supplied data file for the QCARDS database program. Keep this file in the current directory as you add code during the QCARDS.BAS tutorial.
+### QBX.BI
+Include file for use with BASIC programs that call any of the following routines in the QBX.QLB Quick library or in the QBX.LIB stand-alone library: Absolute, Interrupt, InterruptX, Int86Old, or Int86XOld.
+The QBX.BI file defines the types for arguments passed to these routines and also gives DECLARE statements for these routines.
 
-### REMLINE.BAS
-A utility program that converts BASICA programs saved in ASCII format to QuickBASIC-style programs by removing unreferenced line numbers.
+## Programming Toolboxes
 
-### SORTDEMO.BAS
-A program that uses multicolored bars and sound to illustrate various sorting algorithms.
+### Fonts
+* FONTB.BI
+* FONTB.BAS
+* FONTASM.ASM
 
-### TORUS.BAS
-A graphics demonstration program that draws a multicolored doughnut-shaped figure on the screen, then animates it by shifting colors in the palette.
+| Font        | File      | Resolution |
+| ----------- | --------- | ---------- |
+| Courier     | COURA.FON | 640x200    |
+|             | COURB.FON | 640x350    |
+|             | COURE.FON | 640x480    |
+| Helvetica   | HELVA.FON | 640x200    |
+|             | HELVB.FON | 640x350    |
+|             | HELVE.FON | 640x480    |
+| Times Roman | TMSRA.FON | 640x200    |
+|             | TMSRB.FON | 640x350    |
+|             | TMSRE.FON | 640x480    |
 
-## EXAMPLES
-A directory containing BASIC programs printed in the QuickBASIC manuals and other demonstration programs.
+### Matrix Math
+* MATB.BI
+* MATB.BAS
+
+#### for use with alternate math package (currency support removed)
+* MATBA.BI
+* MATBA.BAS
+
+
+### Presentation Graphics
+* CHRTB.BI
+* CHRTB.BAS
+* CHRTASM.ASM
+
+### User Interface
+* GENERAL.BI
+* GENERAL.BAS
+* MENU.BI
+* MENU.BAS
+* MOUSE.BI
+* MOUSE.BAS
+* WINDOW.BI
+* WINDOW.BAS
+* UIASM.ASM
+
+## Toolbox Demonstrations
+
+### Fonts
+* FONTDEMO.BAS
+
+### ISAM
+* ISAMDEMO.BI
+* ISAMDEMO.BAS
+* ISAMDEM1.BAS
+* ISAMDEM2.BAS
+* AMAZRAYS.DAT
+
+### ISAM database
+* BOOKLOOK.BI
+* BOOKLOOK.BAS
+* BOOKMOD1.BAS
+* BOOKMOD2.BAS
+* BOOKMOD3.BAS
+* BOOKLOOK.MAK
+* BOOKS.MDB
+
+### Presentation Graphics
+* CHRTDEMO.BI
+* CHRTDEMO.BAS
+* CHRTDEM1.BAS
+* CHRTDEM2.BAS
+* SAMPLE.CHT
+
+### User Interface
+* UIDEMO.BAS
+
+## Sample Programs
+
+### ADAPTER.BAS
+Determine graphic adapter
 
 ### BALLPSET.BAS
-A program that bounces a ball off the bottom and sides of the screen by using the PSET option with the graphics PUT statement.
+Bouncing ball using PSET
 
 ### BALLXOR.BAS
-A program that bounces a ball off the bottom and sides of the screen by using the XOR option with the graphics PUT statement.
+Bouncing ball using XOR
 
 ### BAR.BAS
-A program that turns input data into a bar chart.
+Bar chart
+
+### BIGSTRIN.BAS
+Far string demo
 
 ### CAL.BAS
-A program that prints a calendar for any month in any year from 1899 to 2099.
+Perpetual calendar
 
 ### CHECK.BAS
-A checkbook-balancing program that sorts and prints a list of any deposits and withdrawals input by the user, then prints the final balance in the checking account.
+Checkbook program
 
 ### COLORS.BAS
-A program showing all combinations of the 16 background colors and 3 foreground colors (distinct from the background) in the 2 color palettes available in screen mode 1.
+Color and palette demo
 
 ### CRLF.BAS
-A program that opens an ASCII file, expands any lines ending with just a carriage return or a line feed to a carriage-return--line-feed combination, then writes the adjusted lines to a new file.
+Carriage return/line feed filter
 
 ### CUBE.BAS
-A program that illustrates simple animation of a cube by using multiple screen pages in screen mode 7.
+Animated cube
 
 ### EDPAT.BAS
-A program that allows you to edit a pattern tile for use in a PAINT statement. With pattern tiles, you can fill any enclosed graphics area on the screen with a pattern.
+Pattern editor
 
 ### ENTAB.BAS
-A program that compresses an ASCII file by replacing runs of spaces with tab characters.
-
-### FILERR.BAS
-A program that searches for a string of characters in an ASCII file. This program traps and handles common file-access errors such as the user's entering an invalid file name or leaving a drive door open.
+Replace tabs with spaces
 
 ### FLPT.BAS
-A program that lets you examine the internal format used by BASIC to store single-precision numbers.
+Display floating-point numbers
 
 ### INDEX.BAS
-A file I/O program that builds and searches an index of record numbers from a random-access data file.
+Non-ISAM parts inventory
 
 ### MANDEL.BAS
-A program that generates a fractal (a colorful graphic representation of the properties of certain real numbers) on the screen.
+Plots values in a Mandlebrot set
+
+### MUSIC.BAS
+Event trapping demo, plays music
 
 ### PALETTE.BAS
-A program that demonstrates how to give the illusion of movement by rotating the colors displayed by the color attributes from 1 to 15.
+Palette changing demo
+
+### PASSWRD.BAS
+Requests and verifies password
+
+### PGBAR.BAS
+Presentation Graphics bar chart demo
+
+### PGLINEMS.BAS
+Presentation Graphics line chart demo
+
+### PGPIE.BAS
+Presentation Graphics pie chart demo
+
+### PGSCAT.BAS
+Presentation Graphics scatter diagram demo
 
 ### PLOTTER.BAS
-A simple line-sketching program that uses BASIC's DRAW statement.
+Draws lines using cursor keys
 
 ### QLBDUMP.BAS
-A program that allows you to get a listing of the PUBLIC code and data symbols in a QuickBASIC Quick library.
+Allows you to get a listing of the PUBLIC code and data symbols in a QuickBASIC Quick library
 
-### SEARCH.BAS
-A program that searches any disk file for a pattern and reports every byte position in the file where the pattern begins.
+### REMLINE.BAS
+Removes remarks and lines numbers
 
 ### SINEWAVE.BAS
-A program that plots the graph of the sine-wave function for angle values from 0 to PI radians.
+Draws sine wave on screen
 
 ### STRTONUM.BAS
-A program that converts to a numeric value any number input as a string, after first filtering invalid numeric characters (such as commas) out of the string.
+Filters commas from numeric output
 
 ### TERMINAL.BAS
-A program that turns your computer into a "dumb" terminal when used with a modem.
+Terminal emulator
+
+### TIMER.BAS, TIMERA.ASM
+Timer event-trapping demo
 
 ### TOKEN.BAS
-A program that breaks an input string into a series of tokens (a string of characters delimited by blank spaces, tabs, or punctuation marks such as commas or semicolons).
+Breaks input string into components
 
 ### WHEREIS.BAS
-A program that recursively searches through all directories on a disk for a specified file name.
+Locates files on disk
 
-## ADVR_EX
-A directory containing BASIC programs cited in the on-line help.
-
-### CALL_EX.BAS
-Illustrates using the CALL statement
-
-### CHR_EX.BAS
-Illustrates using the the CHR$ function
-
-### CMD_EX.BAS
-Illustrates using the the COMMAND$ function
-
-### COM1_EX.BAS
-Illustrates using the the COMMON and CHAIN statements
-
-### COM2_EX.BAS
-Module used in COM1_EX.BAS above
-
-### CSR_EX.BAS
-Illustrates using the the CSRLIN function
-
-### DECL_EX.BAS
-Illustrates using the DECLARE statement
-
-### DEFFN_EX.BAS
-Illustrates using the DEF FN statement
-
-### DEFSG_EX.BAS
-Illustrates using the DEF SEG, PEEK, and POKE statements
-
-### DRAW_EX.BAS
-Illustrates using the DRAW statement
-
-### FUNC_EX.BAS
-Illustrates using FUNCTION...END FUNCTION
-
-### OUT_EX.BAS
-Illustrates using the OUT statement
-
-### SHARE_EX.BAS
-Illustrates using the SHARED statement
-
-### SHELL_EX.BAS
-Illustrates using the SHELL statement
-
-### STAT_EX.BAS
-Illustrates using the STATIC statement
-
-### SUB_EX.BAS
-Illustrates using SUB...END SUB
-
-### TYPE_EX.BAS
-Illustrates using TYPE..END TYPE
-
-### UBO_EX.BAS
-Illustrates using the UBOUND and LBOUND functions
-
-### UCASE_EX.BAS
-Illustrates using the UCASE$ function
-
-### WINDO_EX.BAS
-Illustrates using the WINDOW statement
+### Mixed language
+Far string usage demo
+* MXADSTA.ASM
+* MXSHKA.ASM
+* MXADSTB.BAS
+* MXSHKB.BAS
+* MXADSTC.C
+* MXSHKC.C
+* MXADSTP.PAS
+* MXSHKP.PAS
+* MXADSTF.FOR
+* MXSHKF.FOR
