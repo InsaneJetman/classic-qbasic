@@ -1,5 +1,5 @@
 # QBasic Examples
-QBasic example programs that came with MS-DOS v5.00
+QBasic example programs that came with MS-DOS v5.00 plus QBasic Sorting Demo
 
 ### Gorillas
 `GORILLA.BAS`: an [artillery](https://en.wikipedia.org/wiki/Artillery_game) game
@@ -12,3 +12,6 @@ QBasic example programs that came with MS-DOS v5.00
 
 ### RemLine
 `REMLINE.BAS`: a line number removal utility
+
+### Sorting Demo
+`SORTDEMO.BAS`: a program that uses multicolored bars and sound to illustrate various sorting algorithms.
