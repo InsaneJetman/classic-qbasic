@@ -69,6 +69,7 @@ DEFINT A-Z      ' Default type integer.
   Initialize             ' Initialize data values.
   SortMenu               ' Print sort menu.
   WIDTH 80, InitRow      ' Restore original number of rows.
+  COLOR 7, 0             ' Restore default color    
   CLS
   END
 
@@ -216,7 +217,7 @@ SUB ElapsedTime (CurrentRow) STATIC
    ' reverse video:
    COLOR Foreground, Background
    LOCATE Selection + 4, LEFTCOLUMN - 2
-   PRINT USING FORMAT; OptionTitle(Selection), TIMER - StartTime;
+   PRINT USING FORMAT; OptionTitle(Selection); TIMER - StartTime;
 
    IF NoSound THEN
       SOUND 30000, Pause            ' Sound off, so just pause.

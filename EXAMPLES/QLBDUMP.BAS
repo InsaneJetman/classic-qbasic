@@ -29,7 +29,13 @@ DIM EHdr AS ExeHdr, Qhdr AS QBHdr, QHdrPos AS LONG
 INPUT "Enter QuickLibrary file name: ", FileName$
 FileName$ = UCASE$(FileName$)
 IF INSTR(FileName$, ".QLB") = 0 THEN FileName$ = FileName$ + ".QLB"
+
+INPUT "Enter output file name or press ENTER for screen: ", OutFile$
+OutFile$ = UCASE$(OutFile$)
+IF OutFile$ = "" THEN OutFile$ = "CON"
+
 OPEN FileName$ FOR BINARY AS #1
+OPEN OutFile$ FOR OUTPUT AS #2
 
 GET #1, , EHdr               ' Read the EXE format header.
 
@@ -39,13 +45,13 @@ GET #1, QHdrPos, Qhdr        ' Read the QuickLib format header.
 
 IF Qhdr.Magic <> &H6C75 THEN PRINT "Not a QB UserLibrary": END
 
-PRINT "Code Symbols:": PRINT
+PRINT #2, "Code Symbols:": PRINT #2,
 DumpSym Qhdr.SymStart, QHdrPos ' dump code symbols
-PRINT
+PRINT #2,
 
-PRINT "Data Symbols:": PRINT
+PRINT #2, "Data Symbols:": PRINT #2, ""
 DumpSym Qhdr.DatStart, QHdrPos ' dump data symbols
-PRINT
+PRINT #2,
 
 END
 
@@ -73,7 +79,7 @@ SUB DumpSym (SymStart AS INTEGER, QHdrPos AS LONG)
       ' Print only those names that do not begin with "__", "$", or "b$"
       ' as these names are usually considered reserved:
       IF LEFT$(SName$, 2) <> "__" AND LEFT$(SName$, 1) <> "$" AND UCASE$(LEFT$(SName$, 2)) <> "B$" THEN
-         PRINT "  " + SName$
+         PRINT #2, "  " + SName$
       END IF
 
       GET #1, NextSym, QlbSym    ' Read a symbol entry.

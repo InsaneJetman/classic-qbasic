@@ -17,21 +17,15 @@ LOOP WHILE INKEY$ = ""   ' Shift palette until key pressed
 END
 
 '
-' ====================== ChangePalette =======================
-'    This procedure rotates the palette by one each time it
-'    is called.  For example, after the first call to
-'    ChangePalette, PaletteArray(1) = 2, PaletteArray(2) = 3,
-'    . . . , PaletteArray(14) = 15, and PaletteArray(15) = 1
+' ======================= InitPalette ========================
+'    This procedure initializes the integer array used to
+'    change the palette.
 ' ============================================================
 '
-SUB ChangePalette STATIC
-   FOR I = 1 TO 15
-      PaletteArray(I) = (PaletteArray(I) MOD 15) + 1
+SUB InitPalette STATIC
+   FOR I = 0 TO 15
+      PaletteArray(I) = I
    NEXT I
-
-   ' Shift the color displayed by each of the attributes from
-   ' one to fifteen:
-   PALETTE USING PaletteArray(0)
 END SUB
 
 '
@@ -50,14 +44,19 @@ SUB DrawEllipses STATIC
 END SUB
 
 '
-' ======================= InitPalette ========================
-'    This procedure initializes the integer array used to
-'    change the palette.
+' ====================== ChangePalette =======================
+'    This procedure rotates the palette by one each time it
+'    is called.  For example, after the first call to
+'    ChangePalette, PaletteArray(1) = 2, PaletteArray(2) = 3,
+'    . . . , PaletteArray(14) = 15, and PaletteArray(15) = 1
 ' ============================================================
 '
-SUB InitPalette STATIC
-   FOR I = 0 TO 15
-      PaletteArray(I) = I
+SUB ChangePalette STATIC
+   FOR I = 1 TO 15
+      PaletteArray(I) = (PaletteArray(I) MOD 15) + 1
    NEXT I
-END SUB
 
+   ' Shift the color displayed by each of the attributes from
+   ' one to fifteen:
+   PALETTE USING PaletteArray(0)
+END SUB

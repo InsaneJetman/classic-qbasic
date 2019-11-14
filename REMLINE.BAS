@@ -28,8 +28,19 @@ DEFINT A-Z
 '     3. The first number encountered on a line is considered a line
 '        number; thus some continuation lines (in a compiler specific
 '        constructiion) may not be handled correctly.
-'     4. REMLINE should not be used on programs that depend on ERL,
-'        since ERL assumes the existence of line numbers.
+'     4. REMLINE can handle simple statements that test the ERL function
+'        using  relational operators such as =, <, and >. For example,
+'        the following statement is handled correctly:
+'
+'             IF ERL = 100 THEN END
+'
+'        Line 100 is not removed from the source code. However, more
+'        complex expressions that contain the +, -, AND, OR, XOR, EQV,
+'        MOD, or IMP operators may not be handled correctly. For example,
+'        in the following statement REMLINE does not recognize line 105
+'        as a referenced line number and removes it from the source code:
+'
+'             IF ERL + 5 = 105 THEN END
 '
 '   If you do not like the way REMLINE formats its output, you can modify
 '   the output lines in SUB GenOutFile. An example is shown in comments.
@@ -57,15 +68,15 @@ DIM SHARED Seps$, InputFile$, OutputFile$, TmpFile$
 
 ' Keyword search data
 
-CONST KeyWordCount = 8
+CONST KeyWordCount = 9
 DIM SHARED KeyWordTable$(KeyWordCount)
 
 KeyData:
-   DATA THEN, ELSE, GOSUB, GOTO, RESUME, RETURN, RESTORE, RUN
+   DATA THEN, ELSE, GOSUB, GOTO, RESUME, RETURN, RESTORE, RUN, ERL, ""
 
 ' Start of module-level program code
 
-   Seps$ = " ,:" + CHR$(9)
+   Seps$ = " ,:=<>()" + CHR$(9)
    InitKeyTable
    GetFileNames
    ON ERROR GOTO FileErr1

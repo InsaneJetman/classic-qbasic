@@ -4,7 +4,7 @@ DECLARE SUB Siren (Hi%, Range%)
 DECLARE SUB Klaxon (Hi%, Low%)
 DEFINT A-Z
 
-' QB4 Version of Sound Effects Demo Program
+' QB 4.5 Version of Sound Effects Demo Program
 
 ' Sound effects menu
 DO
@@ -76,4 +76,3 @@ SUB Siren (Hi%, Range%)
       NEXT Count
    LOOP
 END SUB
-
