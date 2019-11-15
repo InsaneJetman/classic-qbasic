@@ -115,7 +115,7 @@ DIM SHARED MachSpeed AS SINGLE
   GetInputs Name1$, Name2$, NumGames
   GorillaIntro Name1$, Name2$
   PlayGame Name1$, Name2$, NumGames
- 
+
   DEF SEG = 0                         ' Restore NumLock state
   POKE 1047, KeyFlags
   DEF SEG
@@ -602,17 +602,17 @@ SUB GorillaIntro (Player1$, Player2$)
   VIEW PRINT 9 TO 24
 
   IF Mode = 9 THEN PALETTE OBJECTCOLOR, BackColor
- 
+
   DrawGorilla x, y, ARMSDOWN
   CLS 2
   DrawGorilla x, y, LEFTUP
   CLS 2
   DrawGorilla x, y, RIGHTUP
   CLS 2
- 
+
   VIEW PRINT 1 TO 25
   IF Mode = 9 THEN PALETTE OBJECTCOLOR, 46
- 
+
   IF UCASE$(Char$) = "V" THEN
     Center 2, "Q B A S I C   G O R I L L A S"
     Center 5, "             STARRING:               "
@@ -814,7 +814,7 @@ END SUB
 '  BCoor() - user-defined TYPE array which stores upper left coordinates
 '  of each building.
 SUB PlaceGorillas (BCoor() AS XYPoint)
-    
+
   IF Mode = 9 THEN
     XAdj = 14
     YAdj = 30
@@ -824,7 +824,7 @@ SUB PlaceGorillas (BCoor() AS XYPoint)
   END IF
   SclX# = ScrWidth / 320
   SclY# = ScrHeight / 200
-    
+
   'Place gorillas on second or third building from edge
   FOR i = 1 TO 2
     IF i = 1 THEN BNum = FnRan(2) + 1 ELSE BNum = LastBuilding - FnRan(2)
@@ -847,9 +847,9 @@ SUB PlayGame (Player1$, Player2$, NumGames)
   DIM TotalWins(1 TO 2)
 
   J = 1
-  
+
   FOR i = 1 TO NumGames
-    
+
     CLS
     RANDOMIZE (TIMER)
     CALL MakeCityScape(BCoor())
@@ -916,7 +916,7 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
   ELSE
     PUT (StartX, StartY), GorR&, PSET
   END IF
-  
+
   'throw sound
   PLAY "MBo0L32A-L64CL16BL64A+"
   Rest .1
@@ -949,9 +949,9 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
     y# = StartY
     pointval = OBJECTCOLOR
   END IF
-   
+
   DO WHILE (NOT Impact) AND OnScreen
- 
+
   Rest .02
 
   'Erase old banana, if necessary
@@ -962,12 +962,12 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
 
   x# = StartXPos + (InitXVel# * t#) + (.5 * (Wind / 5) * t# ^ 2)
   y# = StartYPos + ((-1 * (InitYVel# * t#)) + (.5 * gravity# * t# ^ 2)) * (ScrHeight / 350)
-         
+
   IF (x# >= ScrWidth - Scl(10)) OR (x# <= 3) OR (y# >= ScrHeight - 3) THEN
     OnScreen = FALSE
   END IF
 
-          
+
   IF OnScreen AND y# > 0 THEN
 
     'check it
@@ -990,21 +990,21 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
       LookX = LookX + direction
       LookY = LookY + Scl(6)
     LOOP UNTIL Impact OR LookX <> Scl(4)
-   
+
     IF NOT ShotInSun AND NOT Impact THEN
       'plot it
       rot = (t# * 10) MOD 4
       CALL DrawBan(x#, y#, rot, TRUE)
       NeedErase = TRUE
     END IF
-            
+
     oldx# = x#
     oldy# = y#
     oldrot = rot
 
   END IF
 
-      
+
   t# = t# + .1
 
   LOOP
