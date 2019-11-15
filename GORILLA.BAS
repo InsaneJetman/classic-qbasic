@@ -1097,6 +1097,7 @@ SUB SparklePause
           PRINT " ";
         END IF
       NEXT b
+      Rest 0.06
     NEXT A
   WEND
 END SUB
