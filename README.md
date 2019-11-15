@@ -38,3 +38,15 @@ Check out the various other sample programs which Microsoft has included with di
   * [MS-DOS 5.00.409c (beta)](../../tree/DOS_5.00.409c) ([release](../../releases/tag/DOS_5.00.409c))
   * [MS-DOS 5.00](../../tree/DOS_5.00)                  ([release](../../releases/tag/DOS_5.00))
 * [**Game Shop**](../../tree/GameShop) ([release](../../releases/tag/GameShop_1.00))
+
+To try out some of these example programs, look at these collections (binaries included):
+
+* [**16-bit Collection**](../../tree/16-bit) ([release](../../releases/tag/16_bit))
+
+  a select set of QBasic example programs for use on 16-platforms such as DOS/FreeDOS, DOSBox, or even Windows 95/95/XP
+
+* [**QB64**](../../tree/QB64)
+
+  Gorillas and Nibbles for [QB64](https://www.portal.qb64.org/). Two releases are provided:
+  * [**included**](../../tree/QB64_1.0) - updated versions of these games included with QB64 as sample programs ([release](../../releases/tag/QB64_1.0))
+  * [**fixed**](../../tree/QB64_fix) - original games, updated with timing and other bug fixes ([release](../../releases/tag/QB64_fix))
