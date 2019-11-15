@@ -5,3 +5,5 @@ It implements most QBasic statements, and can run many QBasic programs, includin
 **Gorillas** - an [artillery](https://en.wikipedia.org/wiki/Artillery_game) game
 
 **Nibbles** - a classic [snake](https://en.wikipedia.org/wiki/Snake_(video_game_genre)) game
+
+The versions here have been updated to fix timing issues on modern hardware.

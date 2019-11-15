@@ -44,6 +44,7 @@ DECLARE FUNCTION Scl (n!)
 DECLARE FUNCTION GetNum# (Row, Col)
 DECLARE FUNCTION DoShot (PlayerNum, x, y)
 DECLARE FUNCTION ExplodeGorilla (x#, y#)
+DECLARE FUNCTION FnRan% (x AS INTEGER)
 DECLARE FUNCTION Getn# (Row, Col)
 DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
 DECLARE FUNCTION CalcDelay! ()
@@ -102,7 +103,6 @@ DIM SHARED SunHt
 DIM SHARED GHeight
 DIM SHARED MachSpeed AS SINGLE
 
-  DEF FnRan (x) = INT(RND(1) * x) + 1
   DEF SEG = 0                         ' Set NumLock to ON
   KeyFlags = PEEK(1047)
   IF (KeyFlags AND 32) = 0 THEN
@@ -481,6 +481,10 @@ FUNCTION ExplodeGorilla (x#, y#)
   NEXT i
 
   ExplodeGorilla = PlayerHit
+END FUNCTION
+
+FUNCTION FnRan (x AS INTEGER)
+  FnRan = INT(RND(1) * x) + 1
 END FUNCTION
 
 'GetInputs:
@@ -1022,10 +1026,7 @@ END FUNCTION
 'Rest:
 '  pauses the program
 SUB Rest (t#)
-  s# = TIMER
-  t2# = MachSpeed * t# / SPEEDCONST
-  DO
-  LOOP UNTIL TIMER - s# > t2#
+  _DELAY t#
 END SUB
 
 'Scl:
@@ -1099,6 +1100,7 @@ SUB SparklePause
           PRINT " ";
         END IF
       NEXT b
+      Rest 0.06
     NEXT A
   WEND
 END SUB

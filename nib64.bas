@@ -214,11 +214,6 @@ SUB GetInputs (NumPlayers, speed, diff$, monitor$)
         monitor$ = UCASE$(monitor$)
     LOOP UNTIL monitor$ = "M" OR monitor$ = "C"
 
-    startTime# = TIMER                          ' Calculate speed of system
-    FOR i# = 1 TO 1000: NEXT i#                 ' and do some compensation
-    stopTime# = TIMER
-    speed = speed * .5 / (stopTime# - startTime#)
-
 END SUB
 
 'InitColors:
@@ -463,7 +458,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
             END IF
 
             'Delay game
-            FOR a# = 1 TO curSpeed:  NEXT a#
+            _DELAY 0.016 + 0.00042 * curSpeed
 
             'Get keyboard input & Change direction accordingly
             kbd$ = INKEY$
@@ -681,6 +676,7 @@ SUB SparklePause
                     PRINT " ";
                 END IF
             NEXT b
+            _DELAY 0.06
         NEXT a
     WEND
 
@@ -719,4 +715,3 @@ FUNCTION StillWantsToPlay
 
 END FUNCTION
 
-
