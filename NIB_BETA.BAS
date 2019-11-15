@@ -59,6 +59,7 @@ END TYPE                          '-1 if sister point is above, +1 if below
 
 'Define global arrays
 DIM SHARED arena(1 TO 50, 1 TO 80) AS arenaType
+DIM SHARED machineSpeed&
 
 
     Intro
@@ -140,16 +141,18 @@ SUB GetInputs (numPlayers, speed)
     
     speed = (100 - speed) * 2 + 1
 
-    startTime# = TIMER                          ' Calculate speed of system
-    FOR i# = 1 TO 100000: NEXT i#               ' and do some compensation
-    stopTime# = TIMER
-    speed = speed * 50 / (stopTime# - startTime#)
 END SUB
 
 SUB Intro
 
     COLOR 14, 1
     CLS
+
+    startTime# = TIMER                          ' Calculate speed of system
+    DO                                          ' and do some compensation
+        machineSpeed& = machineSpeed& + 1
+    LOOP UNTIL TIMER - startTime# >= 0.5
+
     COLOR 12
     Center 3, "N I B B L E S !"
     COLOR 14
@@ -243,7 +246,7 @@ SUB PlayNibbles (numPlayers, speed)
             END IF
 
             'Delay game
-            FOR a# = 1 TO speed: NEXT a#
+            FOR a& = 1 TO (speed * 0.42 + 16) * (machineSpeed& / 500.0): dud! = TIMER: NEXT a&
 
             'Get keyboard input & Change direction accordingly
             kbd$ = INKEY$
@@ -444,6 +447,7 @@ SUB SparklePause
                     PRINT " ";
                 END IF
             NEXT b
+            FOR a& = 1 TO machineSpeed& 60.0 / 500.0: dud! = TIMER: NEXT a&
         NEXT a
     WEND
 

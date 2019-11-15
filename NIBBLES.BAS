@@ -83,6 +83,7 @@ CONST NEXTLEVEL = 3
 'Global Variables
 DIM SHARED arena(1 TO 50, 1 TO 80) AS arenaType
 DIM SHARED curLevel, colorTable(10)
+DIM SHARED machineSpeed&
 
     RANDOMIZE TIMER
     GOSUB ClearKeyLocks
@@ -214,11 +215,6 @@ SUB GetInputs (NumPlayers, speed, diff$, monitor$)
         monitor$ = UCASE$(monitor$)
     LOOP UNTIL monitor$ = "M" OR monitor$ = "C"
 
-    startTime# = TIMER                          ' Calculate speed of system
-    FOR i# = 1 TO 100000: NEXT i#               ' and do some compensation
-    stopTime# = TIMER
-    speed = speed * 50 / (stopTime# - startTime#)
-
 END SUB
 
 'InitColors:
@@ -253,6 +249,11 @@ SUB Intro
     WIDTH 80, 25
     COLOR 15, 0
     CLS
+
+    startTime# = TIMER                          ' Calculate speed of system
+    DO                                          ' and do some compensation
+        machineSpeed& = machineSpeed& + 1
+    LOOP UNTIL TIMER - startTime# >= 0.5
 
     Center 4, "Q B a s i c   N i b b l e s"
     COLOR 7
@@ -463,7 +464,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
             END IF
 
             'Delay game
-            FOR a# = 1 TO curSpeed:  NEXT a#
+            FOR a& = 1 TO (curSpeed * 0.42 + 16) * (machineSpeed& / 500.0): dud! = TIMER: NEXT a&
 
             'Get keyboard input & Change direction accordingly
             kbd$ = INKEY$
@@ -681,6 +682,7 @@ SUB SparklePause
                     PRINT " ";
                 END IF
             NEXT b
+            FOR a& = 1 TO machineSpeed& 60.0 / 500.0: dud! = TIMER: NEXT a&
         NEXT a
     WEND
 
