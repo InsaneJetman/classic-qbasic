@@ -70,6 +70,9 @@ DIM SHARED machineSpeed&
       PlayNibbles numPlayers, speed
     LOOP WHILE StillWantsToPlay
 
+    COLOR 7, 0
+    CLS
+
 'Takes in a row and a string, and centers the string on that row
 SUB Center (row, text$)
 

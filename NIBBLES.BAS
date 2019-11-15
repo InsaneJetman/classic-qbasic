@@ -97,7 +97,7 @@ DIM SHARED machineSpeed&
     LOOP WHILE StillWantsToPlay
 
     GOSUB RestoreKeyLocks
-    COLOR 15, 0
+    COLOR 7, 0
     CLS
 END
 
