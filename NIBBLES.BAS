@@ -215,9 +215,9 @@ SUB GetInputs (NumPlayers, speed, diff$, monitor$)
     LOOP UNTIL monitor$ = "M" OR monitor$ = "C"
 
     startTime# = TIMER                          ' Calculate speed of system
-    FOR i# = 1 TO 1000: NEXT i#                 ' and do some compensation
+    FOR i# = 1 TO 100000: NEXT i#               ' and do some compensation
     stopTime# = TIMER
-    speed = speed * .5 / (stopTime# - startTime#)
+    speed = speed * 50 / (stopTime# - startTime#)
 
 END SUB
 
@@ -719,4 +719,3 @@ FUNCTION StillWantsToPlay
 
 END FUNCTION
 
-

@@ -36,7 +36,7 @@ DECLARE SUB PlaceGorillas (BCoor() AS ANY)
 DECLARE SUB UpdateScores (Record(), PlayerNum, Results)
 DECLARE SUB DrawGorilla (x, y, arms)
 DECLARE SUB GorillaIntro (Player1$, Player2$)
-DECLARE SUB Rest (t#)
+DECLARE SUB Rest (t!)
 DECLARE SUB VictoryDance (Player)
 DECLARE SUB ClearGorillas ()
 DECLARE SUB DrawBan (xc#, yc#, r, bc)
@@ -1021,11 +1021,9 @@ END FUNCTION
 
 'Rest:
 '  pauses the program
-SUB Rest (t#)
-  s# = TIMER
-  t2# = MachSpeed * t# / SPEEDCONST
-  DO
-  LOOP UNTIL TIMER - s# > t2#
+SUB Rest (t!)
+  t2! = MachSpeed * t! * 1000! / SPEEDCONST
+  FOR t1! = 1 to t2!: dud! = TIMER: NEXT t1!
 END SUB
 
 'Scl:

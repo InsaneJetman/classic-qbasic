@@ -139,6 +139,11 @@ SUB GetInputs (numPlayers, speed)
     LOOP UNTIL speed >= 1 AND speed <= 100
     
     speed = (100 - speed) * 2 + 1
+
+    startTime# = TIMER                          ' Calculate speed of system
+    FOR i# = 1 TO 100000: NEXT i#               ' and do some compensation
+    stopTime# = TIMER
+    speed = speed * 50 / (stopTime# - startTime#)
 END SUB
 
 SUB Intro
