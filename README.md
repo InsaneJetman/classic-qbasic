@@ -9,4 +9,4 @@ A select set of QBasic example programs:
 * [**Sorting Demo**](SORTDEMO.BAS) - a program that uses multicolored bars and sound to illustrate various sorting algorithms
 * [**Torus**](TORUS.BAS) - a graphics demonstration program that draws a multicolored doughnut-shaped figure on the screen, then animates it by shifting colors in the palette
 
-† updated so timing works properly on faster machines
+† updated with timing and other bug fixes
