@@ -5,5 +5,3 @@ It implements most QBasic statements, and can run many QBasic programs, includin
 **Gorillas** - an [artillery](https://en.wikipedia.org/wiki/Artillery_game) game
 
 **Nibbles** - a classic [snake](https://en.wikipedia.org/wiki/Snake_(video_game_genre)) game
-
-Updated versions of these games come included with QB64 as sample programs.
