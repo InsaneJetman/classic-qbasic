@@ -43,7 +43,7 @@ To try out some of these example programs, look at these collections (binaries i
 
 * [**16-bit Collection**](../../tree/16-bit) ([release](../../releases/tag/16_bit))
 
-  a select set of QBasic example programs for use on 16-platforms such as DOS/FreeDOS, DOSBox, or even Windows 95/95/XP
+  a select set of QBasic example programs for use on 16-platforms such as DOS/FreeDOS, DOSBox, or even Windows 95/98/XP
 
 * [**QB64**](../../tree/QB64)
 
