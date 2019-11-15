@@ -625,6 +625,7 @@ SUB GorillaIntro (Player1$, Player2$)
 
     PUT (x - 13, y), GorD&, PSET
     PUT (x + 47, y), GorD&, PSET
+    PLAY "MF"
     Rest 1
 
     PUT (x - 13, y), GorL&, PSET
