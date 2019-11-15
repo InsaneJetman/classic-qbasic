@@ -242,8 +242,8 @@ END FUNCTION
 '   Text$ - text to be printed
 '
 SUB Center (Row, Text$)
-  Col = MaxCol \ 2
-  LOCATE Row, Col - (LEN(Text$) / 2 + .5)
+  Col = (MaxCol - LEN(Text$)) \ 2 + 1
+  LOCATE Row, Col
   PRINT Text$;
 END SUB
 
