@@ -150,7 +150,7 @@ SUB DrawScreen
     'Print title & message
     Center 1, "Nibbles!"
     Center 11, "Initializing Playing Field..."
-    
+
     'Initialize arena array
     FOR row = 1 TO 50
         FOR col = 1 TO 80
@@ -170,7 +170,7 @@ SUB EraseSnake (snake() AS snaketype, snakeBod() AS snakeBody, snakeNum)
             Set snakeBod(tail, snakeNum).row, snakeBod(tail, snakeNum).col, colorTable(4)
         NEXT b
     NEXT c
-    
+
 END SUB
 
 'GetInputs:
@@ -198,7 +198,7 @@ SUB GetInputs (NumPlayers, speed, diff$, monitor$)
         INPUT gamespeed$
     LOOP UNTIL VAL(gamespeed$) >= 1 AND VAL(gamespeed$) <= 100
     speed = VAL(gamespeed$)
-  
+
     speed = (100 - speed) * 2 + 1
 
     DO
@@ -220,7 +220,7 @@ END SUB
 'InitColors:
 'Initializes playing field colors
 SUB InitColors
-    
+
     FOR row = 1 TO 50
         FOR col = 1 TO 80
             arena(row, col).acolor = colorTable(4)
@@ -228,7 +228,7 @@ SUB InitColors
     NEXT row
 
     CLS
-   
+
     'Set (turn on) pixels for screen border
     FOR col = 1 TO 80
         Set 3, col, colorTable(3)
@@ -279,7 +279,7 @@ END SUB
 'Level:
 'Sets game level
 SUB Level (WhatToDO, sammy() AS snaketype) STATIC
-    
+
     SELECT CASE (WhatToDO)
 
     CASE STARTOVER
@@ -296,7 +296,7 @@ SUB Level (WhatToDO, sammy() AS snaketype) STATIC
     sammy(2).alive = TRUE
 
     InitColors
-    
+
     SELECT CASE curLevel
     CASE 1
         sammy(1).row = 25: sammy(2).row = 25
@@ -333,7 +333,7 @@ SUB Level (WhatToDO, sammy() AS snaketype) STATIC
         sammy(1).row = 7: sammy(2).row = 43
         sammy(1).col = 60: sammy(2).col = 20
         sammy(1).direction = 3: sammy(2).direction = 4
-   
+
     CASE 5
         FOR i = 13 TO 39
             Set i, 21, colorTable(3)
@@ -393,7 +393,7 @@ SUB Level (WhatToDO, sammy() AS snaketype) STATIC
         sammy(1).row = 40: sammy(2).row = 15
         sammy(1).col = 75: sammy(2).col = 5
         sammy(1).direction = 1: sammy(2).direction = 2
-   
+
     CASE ELSE
         FOR i = 4 TO 49 STEP 2
             Set i, 10, colorTable(3)
@@ -424,7 +424,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
     sammy(2).lives = 5
     sammy(2).score = 0
     sammy(2).scolor = colorTable(2)
-                 
+
     Level STARTOVER, sammy()
     startRow1 = sammy(1).row: startCol1 = sammy(1).col
     startRow2 = sammy(2).row: startCol2 = sammy(2).col
@@ -522,7 +522,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
                     COLOR , colorTable(4)
                     LOCATE numberRow, NumberCol
                     PRINT " "
-                   
+
                     playerDied = TRUE
                     sammy(a).alive = FALSE
                     sammy(a).lives = sammy(a).lives - 1
@@ -542,7 +542,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
         LOOP UNTIL playerDied
 
         curSpeed = speed                ' reset speed to initial value
-       
+
         FOR a = 1 TO NumPlayers
             EraseSnake sammy(), sammyBody(), a
 
@@ -551,7 +551,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
                 'Update score
                 sammy(a).score = sammy(a).score - 10
                 PrintScore NumPlayers, sammy(1).score, sammy(2).score, sammy(1).lives, sammy(2).lives
-                
+
                 IF a = 1 THEN
                     SpacePause " Sammy Dies! Push Space! --->"
                 ELSE
@@ -562,7 +562,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
 
         Level SAMELEVEL, sammy()
         PrintScore NumPlayers, sammy(1).score, sammy(2).score, sammy(1).lives, sammy(2).lives
-     
+
     'Play next round, until either of snake's lives have run out.
     LOOP UNTIL sammy(1).lives = 0 OR sammy(2).lives = 0
 
@@ -682,7 +682,7 @@ SUB SparklePause
                     PRINT " ";
                 END IF
             NEXT b
-            FOR a& = 1 TO machineSpeed& 60.0 / 500.0: dud! = TIMER: NEXT a&
+            FOR a& = 1 TO machineSpeed& * 60.0 / 500.0: dud! = TIMER: NEXT a&
         NEXT a
     WEND
 

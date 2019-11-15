@@ -138,7 +138,7 @@ SUB GetInputs (numPlayers, speed)
         LOCATE 12, 44
         INPUT speed
     LOOP UNTIL speed >= 1 AND speed <= 100
-    
+
     speed = (100 - speed) * 2 + 1
 
 END SUB
@@ -182,7 +182,7 @@ SUB PlayNibbles (numPlayers, speed)
     sammy(2).lives = 5
     sammy(2).score = 0
     sammy(2).scolor = 13
-                 
+
 
     'play Nibbles until finished
 
@@ -195,7 +195,7 @@ SUB PlayNibbles (numPlayers, speed)
         sammy(1).col = 50
         sammy(1).direction = 4
         sammy(1).alive = TRUE
-        
+
         IF numPlayers = 2 THEN
             sammy(2).head = 1
             sammy(2).length = 2
@@ -290,7 +290,7 @@ SUB PlayNibbles (numPlayers, speed)
                     COLOR 1, 1
                     LOCATE numberRow, numberCol
                     PRINT " "
-                   
+
                     playerDied = TRUE
                     sammy(a).alive = FALSE
                     sammy(a).lives = sammy(a).lives - 1
@@ -322,7 +322,7 @@ SUB PlayNibbles (numPlayers, speed)
                 'Update score
                 sammy(a).score = sammy(a).score - 10
                 PrintScore numPlayers, sammy(1).score, sammy(2).score, sammy(1).lives, sammy(2).lives
-                
+
                 IF a = 1 THEN
                     SpacePause " Sammy Dies! Push Space! --->"
                 ELSE
@@ -391,7 +391,7 @@ SUB Set (row, col, acolor)
             IF topFlag THEN                         'Since you cannot have
                 IF acolor > 7 THEN                  'bright backgrounds
                     COLOR acolor, sisterColor       'determine best combo
-                    PRINT CHR$(223);                'to use. 
+                    PRINT CHR$(223);                'to use.
                 ELSE
                     COLOR sisterColor, acolor
                     PRINT CHR$(220);
@@ -447,7 +447,7 @@ SUB SparklePause
                     PRINT " ";
                 END IF
             NEXT b
-            FOR a& = 1 TO machineSpeed& 60.0 / 500.0: dud! = TIMER: NEXT a&
+            FOR a& = 1 TO machineSpeed& * 60.0 / 500.0: dud! = TIMER: NEXT a&
         NEXT a
     WEND
 
