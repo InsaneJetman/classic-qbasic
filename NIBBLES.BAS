@@ -202,8 +202,6 @@ SUB GetInputs (NumPlayers, speed, diff$, monitor$)
         monitor$ = UCASE$(monitor$)
     LOOP UNTIL monitor$ = "M" OR monitor$ = "C"
 
-    speed = speed * .42 + 16
-
 END SUB
 
 'InitColors:
@@ -449,7 +447,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
             END IF
 
             'Delay game
-            __SLEEP curSpeed
+            __SLEEP curSpeed * .42 + 16
 
             'Get keyboard input & Change direction accordingly
             kbd$ = INKEY$
@@ -493,7 +491,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
                         SpacePause "     Level" + STR$(curLevel) + ",  Push Space"
                         IF NumPlayers = 1 THEN sammy(2).row = 0
                         number = 1
-                        IF diff$ = "P" THEN speed = speed - 10: curSpeed = speed
+                        IF diff$ = "Y" THEN curSpeed = curSpeed - 10
                     END IF
                     nonum = TRUE
                     IF curSpeed < 1 THEN curSpeed = 1
