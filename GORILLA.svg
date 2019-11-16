@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The following is a direct conversion of the drawing functions called by the 'DrawGorilla' subroutine in 'GORILLA.BAS' -->
+<svg xmlns="http://www.w3.org/2000/svg" width="4in" height="4in" version="1.1" viewBox="-16.5 -1.5 32 32">
+  <g fill="#fa5" stroke="#fa5" stroke-width="1" stroke-linecap="square">
+    <path d="m-4,0 h7 v2 h1 v2 h-1 v2 h-1 v2 h5 v6 h-2 v6 h-11 v-6 h-2 v-6 h5 v-2 h-1 v-2 h-1 v-2 h1 z"/>
+    <path d="M-3,2 H2 M-2,4 h1 M1,4 h1" fill="none" stroke="#00a"/>
+    <path d="M-7.071068,17.928932 A10,10,0,0,0,-9.238795,28.826834 h4 A10,10,0,0,1,-3.071068,17.928932 Z"/>
+    <path d="M5.071068,17.928932 A10,10,0,0,1,7.238795,28.826834 h-4 A10,10,0,0,0,1.071068,17.928932 Z"/>
+    <path d="M-5,15 A5,5,0,0,0,0,10 M0,10 A5,5,0,0,0,5,15" fill="none" stroke="#00a"/>
+    <path d="M-11.363961,7.636039 A9,9,0,0,0,-11.363961,20.363961 h4 A9,9,0,0,1,-7.363961,7.636039 Z"/>
+    <path d="M10.363961,7.636039 A9,9,0,0,1,10.363961,20.363961 h-4 A9,9,0,0,0,6.363961,7.636039 Z"/>
+  </g>
+</svg>
