@@ -154,7 +154,7 @@ SUB Intro
     startTime# = TIMER                          ' Calculate speed of system
     DO                                          ' and do some compensation
         machineSpeed& = machineSpeed& + 1
-    LOOP UNTIL TIMER - startTime# >= 0.5
+    LOOP UNTIL TIMER - startTime# >= .5
 
     COLOR 12
     Center 3, "N I B B L E S !"
@@ -249,7 +249,7 @@ SUB PlayNibbles (numPlayers, speed)
             END IF
 
             'Delay game
-            FOR a& = 1 TO (speed * 0.42 + 16) * (machineSpeed& / 500.0): dud! = TIMER: NEXT a&
+            FOR a& = 1 TO (speed * .42 + 16) * (machineSpeed& / 500): dud# = TIMER: NEXT a&
 
             'Get keyboard input & Change direction accordingly
             kbd$ = INKEY$
@@ -450,7 +450,7 @@ SUB SparklePause
                     PRINT " ";
                 END IF
             NEXT b
-            FOR a& = 1 TO machineSpeed& * 60.0 / 500.0: dud! = TIMER: NEXT a&
+            FOR a& = 1 TO machineSpeed& * (60 / 500): dud# = TIMER: NEXT a&
         NEXT a
     WEND
 

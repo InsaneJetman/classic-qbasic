@@ -1022,8 +1022,8 @@ END FUNCTION
 'Rest:
 '  pauses the program
 SUB Rest (t!)
-  t2! = MachSpeed * t! * 1000! / SPEEDCONST
-  FOR t1! = 1 to t2!: dud! = TIMER: NEXT t1!
+  t2! = MachSpeed * t! * 1000 / SPEEDCONST
+  FOR t1! = 1 TO t2!: dud! = TIMER: NEXT t1!
 END SUB
 
 'Scl:
@@ -1097,7 +1097,7 @@ SUB SparklePause
           PRINT " ";
         END IF
       NEXT b
-      Rest 0.06
+      Rest .06
     NEXT A
   WEND
 END SUB
