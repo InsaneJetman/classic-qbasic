@@ -43,7 +43,7 @@ DECLARE SUB DrawBan (xc#, yc#, r, bc)
 DECLARE FUNCTION Scl (n!)
 DECLARE FUNCTION GetNum# (Row, Col)
 DECLARE FUNCTION DoShot (PlayerNum, x, y)
-DECLARE FUNCTION ExplodeGorilla (x#, y#)
+DECLARE FUNCTION ExplodeGorilla (x#)
 DECLARE FUNCTION FnRan% (x AS INTEGER)
 DECLARE FUNCTION Getn# (Row, Col)
 DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
@@ -95,7 +95,6 @@ DIM SHARED MaxCol
 
 'Screen Color Variables
 DIM SHARED ExplosionColor
-DIM SHARED SunColor
 DIM SHARED BackColor
 DIM SHARED SunHit
 
@@ -455,8 +454,8 @@ END SUB
 'ExplodeGorilla:
 '  Causes gorilla explosion when a direct hit occurs
 'Parameters:
-'  X#, Y# - shot location
-FUNCTION ExplodeGorilla (x#, y#)
+'  X# - shot X-location
+FUNCTION ExplodeGorilla (x#)
   YAdj = Scl(12)
   XAdj = Scl(5)
   SclX# = ScrWidth / 320
@@ -1017,7 +1016,7 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
   IF pointval <> OBJECTCOLOR AND Impact THEN
     CALL DoExplosion(x# + adjust, y# + adjust)
   ELSEIF pointval = OBJECTCOLOR THEN
-    PlayerHit = ExplodeGorilla(x#, y#)
+    PlayerHit = ExplodeGorilla(x#)
   END IF
 
   PlotShot = PlayerHit
