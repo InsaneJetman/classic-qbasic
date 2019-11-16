@@ -47,7 +47,7 @@ DECLARE FUNCTION ExplodeGorilla (x#)
 DECLARE FUNCTION FnRan (x)
 DECLARE FUNCTION Getn# (Row, Col)
 DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
-DECLARE FUNCTION CalcDelay! ()
+DECLARE FUNCTION CalcDelay& ()
 
 'Make all arrays Dynamic
 '$DYNAMIC
@@ -100,7 +100,7 @@ DIM SHARED SunHit
 
 DIM SHARED SunHt
 DIM SHARED GHeight
-DIM SHARED MachSpeed AS SINGLE
+DIM SHARED MachSpeed&
 
   DEF SEG = 0                         ' Set NumLock to ON
   KeyFlags = PEEK(1047)
@@ -152,7 +152,7 @@ InitVars:
   IF Mode = 9 THEN PALETTE 4, 0   'Check for 64K EGA
   ON ERROR GOTO 0
 
-  MachSpeed = CalcDelay
+  MachSpeed& = CalcDelay&
 
   IF Mode = 9 THEN
     ScrWidth = 640
@@ -201,7 +201,7 @@ InitVars:
       READ RBan&(i)
     NEXT i
 
-    MachSpeed = MachSpeed * 1.3
+    MachSpeed& = MachSpeed& * 1.3
     SunHt = 20
   END IF
 RETURN
@@ -224,13 +224,13 @@ PaletteError:
 REM $STATIC
 'CalcDelay:
 '  Checks speed of the machine.
-FUNCTION CalcDelay!
+FUNCTION CalcDelay&
 
-  s! = TIMER
+  s# = TIMER
   DO
-    i! = i! + 1
-  LOOP UNTIL TIMER - s! >= .5
-  CalcDelay! = i!
+    i& = i& + 1
+  LOOP UNTIL TIMER - s# >= .5
+  CalcDelay& = i&
 
 END FUNCTION
 
