@@ -36,7 +36,7 @@ DECLARE SUB PlaceGorillas (BCoor() AS ANY)
 DECLARE SUB UpdateScores (Record(), PlayerNum, Results)
 DECLARE SUB DrawGorilla (x, y, arms)
 DECLARE SUB GorillaIntro (Player1$, Player2$)
-DECLARE SUB Rest (t!)
+DECLARE SUB Rest (t#)
 DECLARE SUB VictoryDance (Player)
 DECLARE SUB ClearGorillas ()
 DECLARE SUB DrawBan (xc#, yc#, r, bc)
@@ -46,7 +46,7 @@ DECLARE FUNCTION DoShot (PlayerNum, x, y)
 DECLARE FUNCTION ExplodeGorilla (x#, y#)
 DECLARE FUNCTION Getn# (Row, Col)
 DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
-DECLARE FUNCTION CalcDelay! ()
+DECLARE FUNCTION CalcDelay& ()
 
 'Make all arrays Dynamic
 '$DYNAMIC
@@ -99,7 +99,7 @@ DIM SHARED SunHit
 
 DIM SHARED SunHt
 DIM SHARED GHeight
-DIM SHARED MachSpeed AS SINGLE
+DIM SHARED MachSpeed&
 
   DEF FnRan (x) = INT(RND(1) * x) + 1
   DEF SEG = 0                         ' Set NumLock to ON
@@ -152,7 +152,7 @@ InitVars:
   IF Mode = 9 THEN PALETTE 4, 0   'Check for 64K EGA
   ON ERROR GOTO 0
 
-  MachSpeed = CalcDelay
+  MachSpeed& = CalcDelay&
 
   IF Mode = 9 THEN
     ScrWidth = 640
@@ -201,7 +201,7 @@ InitVars:
       READ RBan&(i)
     NEXT i
 
-    MachSpeed = MachSpeed * 1.3
+    MachSpeed& = MachSpeed& * 1.3
     SunHt = 20
   END IF
 RETURN
@@ -224,13 +224,13 @@ PaletteError:
 REM $STATIC
 'CalcDelay:
 '  Checks speed of the machine.
-FUNCTION CalcDelay!
+FUNCTION CalcDelay&
 
-  s! = TIMER
+  s# = TIMER
   DO
-    i! = i! + 1
-  LOOP UNTIL TIMER - s! >= .5
-  CalcDelay! = i!
+    i& = i& + 1
+  LOOP UNTIL TIMER - s# >= .5
+  CalcDelay& = i&
 
 END FUNCTION
 
@@ -1021,9 +1021,9 @@ END FUNCTION
 
 'Rest:
 '  pauses the program
-SUB Rest (t!)
-  t2! = MachSpeed * t! * 1000 / SPEEDCONST
-  FOR t1! = 1 TO t2!: dud! = TIMER: NEXT t1!
+SUB Rest (t#)
+  t2& = MachSpeed& * t# * 1000 / SPEEDCONST
+  FOR t1& = 1 TO t2&: dud# = TIMER: NEXT t1&
 END SUB
 
 'Scl:
