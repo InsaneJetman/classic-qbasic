@@ -16,6 +16,9 @@
 ' F1 or click the right mouse button.
 '
 
+#lang "qb"
+#include "PlayNull.bi"
+
 'Set default data type to integer for faster game play
 DEFINT A-Z
 
@@ -85,7 +88,6 @@ DIM SHARED arena(1 TO 50, 1 TO 80) AS arenaType
 DIM SHARED curLevel, colorTable(10)
 
     RANDOMIZE TIMER
-    GOSUB ClearKeyLocks
     Intro
     GetInputs NumPlayers, speed, diff$, monitor$
     GOSUB SetColors
@@ -95,23 +97,9 @@ DIM SHARED curLevel, colorTable(10)
       PlayNibbles NumPlayers, speed, diff$
     LOOP WHILE StillWantsToPlay
 
-    GOSUB RestoreKeyLocks
     COLOR 15, 0
     CLS
 END
-
-ClearKeyLocks:
-    DEF SEG = 0                     ' Turn off CapLock, NumLock and ScrollLock
-    KeyFlags = PEEK(1047)
-    POKE 1047, &H0
-    DEF SEG
-    RETURN
-
-RestoreKeyLocks:
-    DEF SEG = 0                     ' Restore CapLock, NumLock and ScrollLock states
-    POKE 1047, KeyFlags
-    DEF SEG
-    RETURN
 
 SetColors:
     IF monitor$ = "M" THEN
@@ -214,10 +202,7 @@ SUB GetInputs (NumPlayers, speed, diff$, monitor$)
         monitor$ = UCASE$(monitor$)
     LOOP UNTIL monitor$ = "M" OR monitor$ = "C"
 
-    startTime# = TIMER                          ' Calculate speed of system
-    FOR i# = 1 TO 1000: NEXT i#                 ' and do some compensation
-    stopTime# = TIMER
-    speed = speed * .5 / (stopTime# - startTime#)
+    speed = speed * 0.42 + 16
 
 END SUB
 
@@ -253,6 +238,7 @@ SUB Intro
     WIDTH 80, 25
     COLOR 15, 0
     CLS
+    LOCATE , , 0
 
     Center 4, "Q B a s i c   N i b b l e s"
     COLOR 7
@@ -463,7 +449,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
             END IF
 
             'Delay game
-            FOR a# = 1 TO curSpeed:  NEXT a#
+            __SLEEP curSpeed
 
             'Get keyboard input & Change direction accordingly
             kbd$ = INKEY$
@@ -681,6 +667,7 @@ SUB SparklePause
                     PRINT " ";
                 END IF
             NEXT b
+            __SLEEP 60
         NEXT a
     WEND
 

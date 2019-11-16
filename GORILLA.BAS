@@ -18,6 +18,9 @@
 ' F1 or click the right mouse button.
 '
 
+#lang "qb"
+#include "PlayNull.bi"
+
 'Set default data type to integer for faster game play
 DEFINT A-Z
 
@@ -46,7 +49,6 @@ DECLARE FUNCTION DoShot (PlayerNum, x, y)
 DECLARE FUNCTION ExplodeGorilla (x#, y#)
 DECLARE FUNCTION Getn# (Row, Col)
 DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
-DECLARE FUNCTION CalcDelay! ()
 
 'Make all arrays Dynamic
 '$DYNAMIC
@@ -78,10 +80,10 @@ DIM SHARED GorillaY(1 TO 2)
 DIM SHARED LastBuilding
 
 DIM SHARED pi#
-DIM SHARED LBan&(x), RBan&(x), UBan&(x), DBan&(x) 'Graphical picture of banana
-DIM SHARED GorD&(120)        'Graphical picture of Gorilla arms down
-DIM SHARED GorL&(120)        'Gorilla left arm raised
-DIM SHARED GorR&(120)        'Gorilla right arm raised
+DIM SHARED LBan&(11), RBan&(11), UBan&(9), DBan&(9) 'Graphical picture of banana
+DIM SHARED GorD&(226)        'Graphical picture of Gorilla arms down
+DIM SHARED GorL&(226)        'Gorilla left arm raised
+DIM SHARED GorR&(226)        'Gorilla right arm raised
 
 DIM SHARED gravity#
 DIM SHARED Wind
@@ -100,140 +102,78 @@ DIM SHARED SunHit
 
 DIM SHARED SunHt
 DIM SHARED GHeight
-DIM SHARED MachSpeed AS SINGLE
 
-  DEF FnRan (x) = INT(RND(1) * x) + 1
-  DEF SEG = 0                         ' Set NumLock to ON
-  KeyFlags = PEEK(1047)
-  IF (KeyFlags AND 32) = 0 THEN
-    POKE 1047, KeyFlags OR 32
-  END IF
-  DEF SEG
+FUNCTION FnRan (x)
+FnRan = INT(RND(1) * x) + 1
+END FUNCTION
 
+  __Windowtitle "QBasic GORILLAS"
   GOSUB InitVars
   Intro
   GetInputs Name1$, Name2$, NumGames
   GorillaIntro Name1$, Name2$
   PlayGame Name1$, Name2$, NumGames
+  SCREEN 0
 
-  DEF SEG = 0                         ' Restore NumLock state
-  POKE 1047, KeyFlags
-  DEF SEG
 END
 
 
 CGABanana:
   'BananaLeft
-  DATA 327686, -252645316, 60
+  DATA &h70031, &h3000000, &h3, &h30303, &h3030300, &h3000000, &h303, &h3030300, &h0, &h30303, &h3000000, &h3
   'BananaDown
-  DATA 196618, -1057030081, 49344
+  DATA &h40049, &h30300, &h3030000, &h3030000, &h3030303, &h3, &h3030303, &h3, &h3030000, &h3
   'BananaUp
-  DATA 196618, -1056980800, 63
+  DATA &h40049, &h3000000, &h303, &h3000000, &h3030303, &h3000000, &h3030303, &h303, &h303, &h30300
   'BananaRight
-  DATA 327686,  1010580720, 240
+  DATA &h70031, &h30300, &h3000000, &h303, &h3030000, &h3, &h30303, &h3030000, &h3000003, &h303, &h30300, 0
 
 EGABanana:
   'BananaLeft
-  DATA 458758,202116096,471604224,943208448,943208448,943208448,471604224,202116096,0
+  DATA &h70031, &hE000000, &hE, &hE0E0E, &hE0E0E00, &hE000000, &hE0E, &hE0E0E00, &h0, &hE0E0E, &hE000000, &hE
   'BananaDown
-  DATA 262153, -2134835200, -2134802239, -2130771968, -2130738945,8323072, 8323199, 4063232, 4063294
+  DATA &h40049, &hE0E00, &hE0E0000, &hE0E0000, &hE0E0E0E, &hE, &hE0E0E0E, &hE, &hE0E0000, &hE
   'BananaUp
-  DATA 262153, 4063232, 4063294, 8323072, 8323199, -2130771968, -2130738945, -2134835200,-2134802239
+  DATA &h40049, &hE000000, &hE0E, &hE000000, &hE0E0E0E, &hE000000, &hE0E0E0E, &hE0E, &hE0E, &hE0E00
   'BananaRight
-  DATA 458758, -1061109760, -522133504, 1886416896, 1886416896, 1886416896,-522133504,-1061109760,0
+  DATA &h70031, &hE0E00, &hE000000, &hE0E, &hE0E0000, &hE, &hE0E0E, &hE0E0000, &hE00000E, &hE0E, &hE0E00, 0
 
 InitVars:
   pi# = 4 * ATN(1#)
 
-  'This is a clever way to pick the best graphics mode available
-  ON ERROR GOTO ScreenModeError
-  Mode = 9
-  SCREEN Mode
-  ON ERROR GOTO PaletteError
-  IF Mode = 9 THEN PALETTE 4, 0   'Check for 64K EGA
-  ON ERROR GOTO 0
-
-  MachSpeed = CalcDelay
+  'Use CGA mode if specified on the command line
+  IF UCASE$(COMMAND$) = "CGA" THEN Mode = 1 ELSE Mode  = 9
 
   IF Mode = 9 THEN
     ScrWidth = 640
     ScrHeight = 350
     GHeight = 25
-    RESTORE EGABanana
-    REDIM LBan&(8), RBan&(8), UBan&(8), DBan&(8)
-
-    FOR i = 0 TO 8
-      READ LBan&(i)
-    NEXT i
-
-    FOR i = 0 TO 8
-      READ DBan&(i)
-    NEXT i
-
-    FOR i = 0 TO 8
-      READ UBan&(i)
-    NEXT i
-
-    FOR i = 0 TO 8
-      READ RBan&(i)
-    NEXT i
-
     SunHt = 39
-
+    RESTORE EGABanana
   ELSE
-
     ScrWidth = 320
     ScrHeight = 200
     GHeight = 12
-    RESTORE CGABanana
-    REDIM LBan&(2), RBan&(2), UBan&(2), DBan&(2)
-    REDIM GorL&(20), GorD&(20), GorR&(20)
-
-    FOR i = 0 TO 2
-      READ LBan&(i)
-    NEXT i
-    FOR i = 0 TO 2
-      READ DBan&(i)
-    NEXT i
-    FOR i = 0 TO 2
-      READ UBan&(i)
-    NEXT i
-    FOR i = 0 TO 2
-      READ RBan&(i)
-    NEXT i
-
-    MachSpeed = MachSpeed * 1.3
     SunHt = 20
+    RESTORE CGABanana
   END IF
+
+  FOR i = 0 TO 11
+    READ LBan&(i)
+  NEXT i
+
+  FOR i = 0 TO 9
+    READ DBan&(i)
+  NEXT i
+
+  FOR i = 0 TO 9
+    READ UBan&(i)
+  NEXT i
+
+  FOR i = 0 TO 11
+    READ RBan&(i)
+  NEXT i
 RETURN
-
-ScreenModeError:
-  IF Mode = 1 THEN
-    CLS
-    LOCATE 10, 5
-    PRINT "Sorry, you must have CGA, EGA color, or VGA graphics to play GORILLA.BAS"
-    END
-  ELSE
-    Mode = 1
-    RESUME
-  END IF
-
-PaletteError:
-  Mode = 1            '64K EGA cards will run in CGA mode.
-  RESUME NEXT
-
-REM $STATIC
-'CalcDelay:
-'  Checks speed of the machine.
-FUNCTION CalcDelay!
-
-  s! = TIMER
-  DO
-    i! = i! + 1
-  LOOP UNTIL TIMER - s! >= .5
-  CalcDelay! = i!
-
-END FUNCTION
 
 ' Center:
 '   Centers and prints a text string on a given row
@@ -242,8 +182,8 @@ END FUNCTION
 '   Text$ - text to be printed
 '
 SUB Center (Row, Text$)
-  Col = MaxCol \ 2
-  LOCATE Row, Col - (LEN(Text$) / 2 + .5)
+  Col = (MaxCol - LEN(Text$)) \ 2 + 1
+  LOCATE Row, Col
   PRINT Text$;
 END SUB
 
@@ -382,9 +322,9 @@ SELECT CASE r
   CASE 1
     IF bc THEN PUT (xc#, yc#), UBan&, PSET ELSE PUT (xc#, yc#), UBan&, XOR
   CASE 2
-    IF bc THEN PUT (xc#, yc#), DBan&, PSET ELSE PUT (xc#, yc#), DBan&, XOR
-  CASE 3
     IF bc THEN PUT (xc#, yc#), RBan&, PSET ELSE PUT (xc#, yc#), RBan&, XOR
+  CASE 3
+    IF bc THEN PUT (xc#, yc#), DBan&, PSET ELSE PUT (xc#, yc#), DBan&, XOR
 END SELECT
 
 END SUB
@@ -489,7 +429,7 @@ END FUNCTION
 '  Player1$, Player2$ - player names
 '  NumGames - number of games to play
 SUB GetInputs (Player1$, Player2$, NumGames)
-  COLOR 7, 0
+  IF Mode <> 1 THEN COLOR 7
   CLS
 
   LOCATE 8, 15
@@ -532,7 +472,7 @@ END SUB
 FUNCTION GetNum# (Row, Col)
   Result$ = ""
   Done = FALSE
-  WHILE INKEY$ <> "": WEND   'Clear keyboard buffer
+  Rest 0 'Clear keyboard buffer
 
   DO WHILE NOT Done
 
@@ -557,6 +497,9 @@ FUNCTION GetNum# (Row, Col)
         IF LEN(Result$) > 0 THEN
           Result$ = LEFT$(Result$, LEN(Result$) - 1)
         END IF
+      CASE CHR$(0) + CHR$(107)
+        SCREEN 0
+        END
       CASE ELSE
         IF LEN(Kbd$) > 0 THEN
           BEEP
@@ -585,6 +528,7 @@ SUB GorillaIntro (Player1$, Player2$)
   DO WHILE Char$ = ""
     Char$ = INKEY$
   LOOP
+  IF Char$ = CHR$(0) + CHR$(107) THEN SCREEN 0: END
 
   IF Mode = 1 THEN
     x = 125
@@ -660,14 +604,11 @@ END SUB
 '  Displays game introduction
 SUB Intro
 
-  SCREEN 0
-  WIDTH 80, 25
+  IF Mode = 1 THEN SCREEN 2 ELSE SCREEN Mode
   MaxCol = 80
-  COLOR 15, 0
-  CLS
 
   Center 4, "Q B a s i c    G O R I L L A S"
-  COLOR 7
+  IF Mode <> 1 THEN COLOR 7
   Center 6, "Copyright (C) Microsoft Corporation 1990"
   Center 8, "Your mission is to hit your opponent with the exploding"
   Center 9, "banana by varying the angle and power of your throw, taking"
@@ -876,9 +817,9 @@ SUB PlayGame (Player1$, Player2$, NumGames)
     SLEEP 1
   NEXT i
 
-  SCREEN 0
+  IF Mode = 1 THEN SCREEN 2 ELSE SCREEN Mode
   WIDTH 80, 25
-  COLOR 7, 0
+  IF Mode <> 1 THEN COLOR 7
   MaxCol = 80
   CLS
 
@@ -888,8 +829,6 @@ SUB PlayGame (Player1$, Player2$, NumGames)
   LOCATE 12, 30: PRINT Player2$; TAB(50); TotalWins(2)
   Center 24, "Press any key to continue"
   SparklePause
-  COLOR 7, 0
-  CLS
 END SUB
 
 'PlayGame:
@@ -1004,7 +943,6 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
 
   END IF
 
-
   t# = t# + .1
 
   LOOP
@@ -1022,10 +960,14 @@ END FUNCTION
 'Rest:
 '  pauses the program
 SUB Rest (t#)
-  s# = TIMER
-  t2# = MachSpeed * t# / SPEEDCONST
+  t2# = TIMER + t# * 500 / SPEEDCONST
   DO
-  LOOP UNTIL TIMER - s# > t2#
+    __SLEEP 1
+    DO
+      Kbd$ = INKEY$
+      IF Kbd$ = CHR$(0) + CHR$(107) THEN SCREEN 0: END
+    LOOP WHILE Kbd$ <> ""
+  LOOP WHILE TIMER < t2#
 END SUB
 
 'Scl:
@@ -1065,7 +1007,6 @@ SUB SetScreen
     ExplosionColor = 2
     BackColor = 0
     COLOR BackColor, 2
-
   END IF
 
 END SUB
@@ -1074,32 +1015,34 @@ END SUB
 '  Creates flashing border for intro and game over screens
 SUB SparklePause
 
-  COLOR 4, 0
+  IF Mode <> 1 THEN COLOR 4, 0
   A$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
-  WHILE INKEY$ <> "": WEND 'Clear keyboard buffer
+  Rest 0 'Clear keyboard buffer
 
-  WHILE INKEY$ = ""
-    FOR A = 1 TO 5
-      LOCATE 1, 1                             'print horizontal sparkles
-      PRINT MID$(A$, A, 80);
-      LOCATE 22, 1
-      PRINT MID$(A$, 6 - A, 80);
+  WHILE Kbd$ = ""
+    a = (a MOD 5) + 1
+    LOCATE 1, 1                             'print horizontal sparkles
+    PRINT MID$(A$, a, 80);
+    LOCATE 22, 1
+    PRINT MID$(A$, 6 - a, 80);
 
-      FOR b = 2 TO 21                         'Print Vertical sparkles
-        c = (A + b) MOD 5
-        IF c = 1 THEN
-          LOCATE b, 80
-          PRINT "*";
-          LOCATE 23 - b, 1
-          PRINT "*";
-        ELSE
-          LOCATE b, 80
-          PRINT " ";
-          LOCATE 23 - b, 1
-          PRINT " ";
-        END IF
-      NEXT b
-    NEXT A
+    FOR b = 2 TO 21                         'Print Vertical sparkles
+      c = (a + b) MOD 5
+      IF c = 1 THEN
+        LOCATE b, 80
+        PRINT "*";
+        LOCATE 23 - b, 1
+        PRINT "*";
+      ELSE
+        LOCATE b, 80
+        PRINT " ";
+        LOCATE 23 - b, 1
+        PRINT " ";
+      END IF
+    NEXT b
+    __SLEEP 60
+    Kbd$ = INKEY$
+    IF Kbd$ = CHR$(0) + CHR$(107) THEN SCREEN 0: END
   WEND
 END SUB
 
