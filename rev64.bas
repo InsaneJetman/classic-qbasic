@@ -138,7 +138,7 @@ FUNCTION CheckPath (i, IBound, IStep, j, JBound, JStep, Opponent)
     END IF
   WEND
   CheckPath = count
-    
+
 END FUNCTION
 
 SUB ComputerMove
@@ -304,7 +304,7 @@ SUB DrawGameBoard
     LINE (270 + i * 40, 70)-(270 + i * 40, 390), 0
     LINE (269 + i * 40, 70)-(269 + i * 40, 390), 0
   NEXT i
-  
+
   LOCATE 2, 35: PRINT "R E V E R S I"
 
   LOCATE 5, 11: PRINT "Game Controls"
