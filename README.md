@@ -6,4 +6,4 @@ It implements most QBasic statements, and can run many QBasic programs, includin
 
 **Nibbles** - a classic [snake](https://en.wikipedia.org/wiki/Snake_(video_game_genre)) game
 
-The versions here have been updated to fix timing issues on modern hardware.
+The versions here have been updated with timing and other bug fixes.
