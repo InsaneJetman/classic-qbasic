@@ -11,12 +11,7 @@ This collection includes a select set of QBasic example programs modified to be 
 Release Notes:
 
 * Sound is not currently supported.
-
   A temporary null `PLAY` statement library ([PlayNull.bi](PlayNull.bi) and [PlayNull.bas](PlayNull.bas)) is included.
   Other libraries exist, but are not without bugs.
 
-* The collection can be compiled with:
-
-      fbc -lib PlayNull.bas
-      fbc NIBBLES.bas
-      fbc -s gui GORILLA.bas
+* The collection can be compiled using [compile.bat](compile.bat).
