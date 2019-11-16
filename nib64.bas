@@ -457,7 +457,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
             END IF
 
             'Delay game
-            _DELAY 0.016 + 0.00042 * curSpeed
+            _DELAY .016 + .00042 * curSpeed
 
             'Get keyboard input & Change direction accordingly
             kbd$ = INKEY$
@@ -675,7 +675,7 @@ SUB SparklePause
                     PRINT " ";
                 END IF
             NEXT b
-            _DELAY 0.06
+            _DELAY .06
         NEXT a
     WEND
 

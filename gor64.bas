@@ -44,7 +44,7 @@ DECLARE FUNCTION Scl (n!)
 DECLARE FUNCTION GetNum# (Row, Col)
 DECLARE FUNCTION DoShot (PlayerNum, x, y)
 DECLARE FUNCTION ExplodeGorilla (x#)
-DECLARE FUNCTION FnRan% (x AS INTEGER)
+DECLARE FUNCTION FnRan (x)
 DECLARE FUNCTION Getn# (Row, Col)
 DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
 DECLARE FUNCTION CalcDelay! ()
@@ -483,7 +483,7 @@ FUNCTION ExplodeGorilla (x#)
   ExplodeGorilla = PlayerHit
 END FUNCTION
 
-FUNCTION FnRan (x AS INTEGER)
+FUNCTION FnRan (x)
   FnRan = INT(RND(1) * x) + 1
 END FUNCTION
 
@@ -1101,7 +1101,7 @@ SUB SparklePause
           PRINT " ";
         END IF
       NEXT b
-      Rest 0.06
+      Rest .06
     NEXT A
   WEND
 END SUB
