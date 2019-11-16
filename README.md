@@ -43,10 +43,14 @@ To try out some of these example programs, look at these collections (binaries i
 
 * [**16-bit Collection**](../../tree/16-bit) ([release](../../releases/tag/16_bit))
 
-  a select set of QBasic example programs for use on 16-platforms such as DOS/FreeDOS, DOSBox, or even Windows 95/98/XP
+  This collection contains a select set of QBasic example programs for use on 16-platforms such as DOS/FreeDOS, DOSBox, or even Windows 95/98/XP.
 
 * [**QB64 Collection**](../../tree/QB64)
 
   Gorillas and Nibbles for [QB64](https://www.portal.qb64.org/). Two releases are provided:
   * [**included**](../../tree/QB64_1.0) - updated versions of these games included with QB64 as sample programs ([release](../../releases/tag/QB64_1.0))
   * [**fixed**](../../tree/QB64_fix) - original games, updated with timing and other bug fixes, also includes Reversi ([release](../../releases/tag/QB64_fix))
+
+* [**FreeBASIC Collection**](../../tree/FreeBASIC)
+
+  Gorillas and Nibbles for [FreeBASIC](https://www.freebasic.net/).
