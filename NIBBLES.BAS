@@ -97,7 +97,7 @@ DIM SHARED curLevel, colorTable(10)
       PlayNibbles NumPlayers, speed, diff$
     LOOP WHILE StillWantsToPlay
 
-    COLOR 15, 0
+    COLOR 7, 0
     CLS
 END
 
@@ -202,7 +202,7 @@ SUB GetInputs (NumPlayers, speed, diff$, monitor$)
         monitor$ = UCASE$(monitor$)
     LOOP UNTIL monitor$ = "M" OR monitor$ = "C"
 
-    speed = speed * 0.42 + 16
+    speed = speed * .42 + 16
 
 END SUB
 

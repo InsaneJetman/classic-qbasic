@@ -46,12 +46,10 @@ DECLARE SUB DrawBan (xc#, yc#, r, bc)
 DECLARE FUNCTION Scl (n!)
 DECLARE FUNCTION GetNum# (Row, Col)
 DECLARE FUNCTION DoShot (PlayerNum, x, y)
-DECLARE FUNCTION ExplodeGorilla (x#, y#)
+DECLARE FUNCTION ExplodeGorilla (x#)
+DECLARE FUNCTION FnRan (x)
 DECLARE FUNCTION Getn# (Row, Col)
 DECLARE FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
-
-'Make all arrays Dynamic
-'$DYNAMIC
 
 'User-Defined TYPEs
 TYPE XYPoint
@@ -96,16 +94,11 @@ DIM SHARED MaxCol
 
 'Screen Color Variables
 DIM SHARED ExplosionColor
-DIM SHARED SunColor
 DIM SHARED BackColor
 DIM SHARED SunHit
 
 DIM SHARED SunHt
 DIM SHARED GHeight
-
-FUNCTION FnRan (x)
-FnRan = INT(RND(1) * x) + 1
-END FUNCTION
 
   __Windowtitle "QBasic GORILLAS"
   GOSUB InitVars
@@ -116,7 +109,6 @@ END FUNCTION
   SCREEN 0
 
 END
-
 
 CGABanana:
   'BananaLeft
@@ -395,8 +387,8 @@ END SUB
 'ExplodeGorilla:
 '  Causes gorilla explosion when a direct hit occurs
 'Parameters:
-'  X#, Y# - shot location
-FUNCTION ExplodeGorilla (x#, y#)
+'  X# - shot X-location
+FUNCTION ExplodeGorilla (x#)
   YAdj = Scl(12)
   XAdj = Scl(5)
   SclX# = ScrWidth / 320
@@ -421,6 +413,10 @@ FUNCTION ExplodeGorilla (x#, y#)
   NEXT i
 
   ExplodeGorilla = PlayerHit
+END FUNCTION
+
+FUNCTION FnRan (x)
+  FnRan = INT(RND(1) * x) + 1
 END FUNCTION
 
 'GetInputs:
@@ -906,7 +902,6 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
     OnScreen = FALSE
   END IF
 
-
   IF OnScreen AND y# > 0 THEN
 
     'check it
@@ -950,7 +945,7 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
   IF pointval <> OBJECTCOLOR AND Impact THEN
     CALL DoExplosion(x# + adjust, y# + adjust)
   ELSEIF pointval = OBJECTCOLOR THEN
-    PlayerHit = ExplodeGorilla(x#, y#)
+    PlayerHit = ExplodeGorilla(x#)
   END IF
 
   PlotShot = PlayerHit
@@ -960,7 +955,7 @@ END FUNCTION
 'Rest:
 '  pauses the program
 SUB Rest (t#)
-  t2# = TIMER + t# * 500 / SPEEDCONST
+  t2# = TIMER + t# * (500 / SPEEDCONST)
   DO
     __SLEEP 1
     DO
@@ -1016,15 +1011,15 @@ END SUB
 SUB SparklePause
 
   IF Mode <> 1 THEN COLOR 4, 0
-  A$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
+  a$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
   Rest 0 'Clear keyboard buffer
 
   WHILE Kbd$ = ""
     a = (a MOD 5) + 1
     LOCATE 1, 1                             'print horizontal sparkles
-    PRINT MID$(A$, a, 80);
+    PRINT MID$(a$, a, 80);
     LOCATE 22, 1
-    PRINT MID$(A$, 6 - a, 80);
+    PRINT MID$(a$, 6 - a, 80);
 
     FOR b = 2 TO 21                         'Print Vertical sparkles
       c = (a + b) MOD 5
