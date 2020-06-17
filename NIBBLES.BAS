@@ -478,6 +478,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
                 CASE CHR$(0) + "K": IF sammy(1).direction <> 4 THEN sammy(1).direction = 3
                 CASE CHR$(0) + "M": IF sammy(1).direction <> 3 THEN sammy(1).direction = 4
                 CASE "p", "P": SpacePause " Game Paused ... Push Space  "
+                CASE CHR$(27), CHR$(0) + CHR$(107): COLOR 7, 0: CLS : END
                 CASE ELSE
             END SELECT
 
