@@ -86,7 +86,7 @@ DIM SHARED curLevel, colorTable(10)
 DIM SHARED machineSpeed&
 
     RANDOMIZE TIMER
-    GOSUB ClearKeyLocks
+    GOSUB SetKeyLocks
     Intro
     GetInputs NumPlayers, speed, diff$, monitor$
     GOSUB SetColors
@@ -101,10 +101,10 @@ DIM SHARED machineSpeed&
     CLS
 END
 
-ClearKeyLocks:
-    DEF SEG = 0                     ' Turn off CapLock, NumLock and ScrollLock
+SetKeyLocks:
+    DEF SEG = 0                     ' Turn on CapLock and NumLock
     KeyFlags = PEEK(1047)
-    POKE 1047, &H0
+    POKE 1047, KeyFlags OR &H60
     DEF SEG
     RETURN
 
