@@ -74,6 +74,7 @@ DECLARE SUB InitColors ()
 DECLARE SUB EraseSnake (snake() AS ANY, snakeBod() AS ANY, snakeNum%)
 DECLARE FUNCTION StillWantsToPlay ()
 DECLARE FUNCTION PointIsThere (row, col, backColor)
+DECLARE FUNCTION GetInkey$ ()
 
 'Constants
 CONST TRUE = -1
@@ -160,6 +161,16 @@ SUB EraseSnake (snake() AS snaketype, snakeBod() AS snakeBody, snakeNum)
 
 END SUB
 
+FUNCTION GetInkey$
+    key$ = INKEY$
+    IF key$ = CHR$(0) + CHR$(107) THEN ' Alt+F4 = "X" clicked
+        COLOR 7, 0
+        CLS
+        END
+    END IF
+    GetInkey$ = key$
+END FUNCTION
+
 'GetInputs:
 '  Gets player inputs
 SUB GetInputs (NumPlayers, speed, diff$, monitor$)
@@ -232,7 +243,11 @@ END SUB
 'Intro:
 '  Displays game introduction
 SUB Intro
+#if __FB_GUI__ <> 0
+    __SCREEN 17, , , 4
+#else
     SCREEN 0
+#endif
     WIDTH 80, 25
     COLOR 15, 0
     CLS
@@ -450,7 +465,7 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
             __SLEEP curSpeed * .42 + 16
 
             'Get keyboard input & Change direction accordingly
-            kbd$ = INKEY$
+            kbd$ = GetInkey$
             SELECT CASE kbd$
                 CASE "w", "W": IF sammy(2).direction <> 2 THEN sammy(2).direction = 1
                 CASE "s", "S": IF sammy(2).direction <> 1 THEN sammy(2).direction = 2
@@ -624,8 +639,8 @@ SUB SpacePause (text$)
     Center 11, "€ﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂ€"
     Center 12, "€ " + LEFT$(text$ + SPACE$(29), 29) + " €"
     Center 13, "€‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹€"
-    WHILE INKEY$ <> "": WEND
-    WHILE INKEY$ <> " ": WEND
+    WHILE GetInkey$ <> "": WEND
+    WHILE GetInkey$ <> " ": WEND
     COLOR 15, colorTable(4)
 
     FOR i = 21 TO 26            ' Restore the screen background
@@ -642,9 +657,9 @@ SUB SparklePause
 
     COLOR 4, 0
     a$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
-    WHILE INKEY$ <> "": WEND 'Clear keyboard buffer
+    WHILE GetInkey$ <> "": WEND 'Clear keyboard buffer
 
-    WHILE INKEY$ = ""
+    WHILE GetInkey$ = ""
         FOR a = 1 TO 5
             LOCATE 1, 1                             'print horizontal sparkles
             PRINT MID$(a$, a, 80);
@@ -682,9 +697,9 @@ FUNCTION StillWantsToPlay
     Center 13, "€      Play Again?   (Y/N)      €"
     Center 14, "€‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹€"
 
-    WHILE INKEY$ <> "": WEND
+    WHILE GetInkey$ <> "": WEND
     DO
-        kbd$ = UCASE$(INKEY$)
+        kbd$ = UCASE$(GetInkey$)
     LOOP UNTIL kbd$ = "Y" OR kbd$ = "N"
 
     COLOR 15, colorTable(4)
