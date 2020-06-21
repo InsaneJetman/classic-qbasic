@@ -17,7 +17,7 @@
 '
 
 #lang "qb"
-#include "PlayNull.bi"
+#include "PlayMidi.bi"
 
 'Set default data type to integer for faster game play
 DEFINT A-Z
@@ -270,7 +270,7 @@ SUB Intro
     Center 20, "                       (Down)                 (Down)     "
     Center 24, "Press any key to continue"
 
-    PLAY "MBT160O1L8CDEDCDL4ECC"
+    PLAY "MBI16T160O1L8CDEDCDL4ECC"
     SparklePause
 
 END SUB

@@ -19,7 +19,7 @@
 '
 
 #lang "qb"
-#include "PlayNull.bi"
+#include "PlayMidi.bi"
 
 'Set default data type to integer for faster game play
 DEFINT A-Z
@@ -566,7 +566,7 @@ SUB GorillaIntro (Player1$, Player2$)
 
     PUT (x - 13, y), GorL&, PSET
     PUT (x + 47, y), GorR&, PSET
-    PLAY "t120o1l16b9n0baan0bn0bn0baaan0b9n0baan0b"
+    PLAY "mft120o1l16b9n0baan0bn0bn0baaan0b9n0baan0b"
     Rest .3
 
     PUT (x - 13, y), GorR&, PSET
@@ -614,7 +614,7 @@ SUB Intro
   Center 12, "of the playing field, its length relative to its strength."
   Center 24, "Press any key to continue"
 
-  PLAY "MBT160O1L8CDEDCDL4ECC"
+  PLAY "MBI16T160O1L8CDEDCDL4ECC"
   SparklePause
   IF Mode = 1 THEN MaxCol = 40
 END SUB
