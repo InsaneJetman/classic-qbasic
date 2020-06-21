@@ -167,6 +167,7 @@ SUB EraseSnake (snake() AS snaketype, snakeBod() AS snakeBody, snakeNum)
             tail = (snake(snakeNum).head + MAXSNAKELENGTH - b) MOD MAXSNAKELENGTH
             Set snakeBod(tail, snakeNum).row, snakeBod(tail, snakeNum).col, colorTable(4)
         NEXT b
+        _DELAY .03
     NEXT c
 
 END SUB
