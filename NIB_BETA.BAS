@@ -320,6 +320,7 @@ SUB PlayNibbles (numPlayers, speed)
                         tail = (sammy(a).head + MAXSNAKELENGTH - b) MOD MAXSNAKELENGTH
                         Set sammyBody(tail, a).row, sammyBody(tail, a).col, 1
                     NEXT b
+                    FOR a& = 1 TO machineSpeed& * (30 / 500): dud# = TIMER: NEXT a&
                 NEXT c
 
                 'Update score

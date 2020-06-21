@@ -502,8 +502,9 @@ SUB PlayNibbles (NumPlayers, speed, diff$)
                     PrintScore NumPlayers, sammy(1).score, sammy(2).score, sammy(1).lives, sammy(2).lives
                     number = number + 1
                     IF number = 10 THEN
-                        EraseSnake sammy(), sammyBody(), 1
-                        EraseSnake sammy(), sammyBody(), 2
+                        FOR b = 1 TO NumPlayers
+                            EraseSnake sammy(), sammyBody(), b
+                        NEXT b
                         LOCATE numberRow, NumberCol: PRINT " "
                         Level NEXTLEVEL, sammy()
                         PrintScore NumPlayers, sammy(1).score, sammy(2).score, sammy(1).lives, sammy(2).lives
