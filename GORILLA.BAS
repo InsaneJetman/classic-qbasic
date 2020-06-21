@@ -625,7 +625,7 @@ SUB GorillaIntro (Player1$, Player2$)
 
     PUT (x - 13, y), GorL&, PSET
     PUT (x + 47, y), GorR&, PSET
-    PLAY "t120o1l16b9n0baan0bn0bn0baaan0b9n0baan0b"
+    PLAY "mft120o1l16b9n0baan0bn0bn0baaan0b9n0baan0b"
     Rest .3
 
     PUT (x - 13, y), GorR&, PSET
