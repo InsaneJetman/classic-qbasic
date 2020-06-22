@@ -625,38 +625,43 @@ SUB GorillaIntro (Player1$, Player2$)
 
     PUT (x - 13, y), GorD&, PSET
     PUT (x + 47, y), GorD&, PSET
-    PLAY "MF"
     Rest 1
 
     PUT (x - 13, y), GorL&, PSET
     PUT (x + 47, y), GorR&, PSET
+    before# = TIMER(.001)
     PLAY "t120o1l16b9n0baan0bn0bn0baaan0b9n0baan0b"
-    Rest .3
+    Rest .3 + 2.944 - (TIMER(.001) - before#)
 
     PUT (x - 13, y), GorR&, PSET
     PUT (x + 47, y), GorL&, PSET
+    before# = TIMER(.001)
     PLAY "o2l16e-9n0e-d-d-n0e-n0e-n0e-d-d-d-n0e-9n0e-d-d-n0e-"
-    Rest .3
+    Rest .3 + 2.944 - (TIMER(.001) - before#)
 
     PUT (x - 13, y), GorL&, PSET
     PUT (x + 47, y), GorR&, PSET
+    before# = TIMER(.001)
     PLAY "o2l16g-9n0g-een0g-n0g-n0g-eeen0g-9n0g-een0g-"
-    Rest .3
+    Rest .3 + 2.944 - (TIMER(.001) - before#)
 
     PUT (x - 13, y), GorR&, PSET
     PUT (x + 47, y), GorL&, PSET
+    before# = TIMER(.001)
     PLAY "o2l16b9n0baan0g-n0g-n0g-eeen0o1b9n0baan0b"
-    Rest .3
+    Rest .3 + 2.944 - (TIMER(.001) - before#)
 
     FOR i = 1 TO 4
       PUT (x - 13, y), GorL&, PSET
       PUT (x + 47, y), GorR&, PSET
+      before# = TIMER(.001)
       PLAY "T160O0L32EFGEFDC"
-      Rest .1
+      Rest .1 + .328 - (TIMER(.001) - before#)
       PUT (x - 13, y), GorR&, PSET
       PUT (x + 47, y), GorL&, PSET
+      before# = TIMER(.001)
       PLAY "T160O0L32EFGEFDC"
-      Rest .1
+      Rest .1 + .328 - (TIMER(.001) - before#)
     NEXT
   END IF
 END SUB
@@ -1027,7 +1032,7 @@ END FUNCTION
 'Rest:
 '  pauses the program
 SUB Rest (t#)
-  _DELAY t#
+  IF (t# > 0) Then _DELAY t#
 END SUB
 
 'Scl:
