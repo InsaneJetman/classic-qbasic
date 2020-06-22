@@ -1130,14 +1130,15 @@ END SUB
 'Parameters:
 '  Player - which gorilla is dancing
 SUB VictoryDance (Player)
-
   FOR i# = 1 TO 4
     PUT (GorillaX(Player), GorillaY(Player)), GorL&, PSET
-    PLAY "MFO0L32EFGEFDC"
-    Rest .2
+    before# = TIMER(.001)
+    PLAY "O0L32EFGEFDC"
+    Rest .2 + .328 - (TIMER(.001) - before#)
     PUT (GorillaX(Player), GorillaY(Player)), GorR&, PSET
-    PLAY "MFO0L32EFGEFDC"
-    Rest .2
+    before# = TIMER(.001)
+    PLAY "O0L32EFGEFDC"
+    Rest .2 + .328 - (TIMER(.001) - before#)
   NEXT
 END SUB
 
