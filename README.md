@@ -11,4 +11,5 @@ This collection includes a select set of QBasic example programs modified to be 
 Release Notes:
 
 * Sound support is now included.
+* A [font](Nibbles.fon) is included for playing Nibbles with a larger window.
 * The collection can be compiled using [compile.bat](compile.bat).
