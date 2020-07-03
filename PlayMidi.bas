@@ -401,6 +401,13 @@ Sub Play(TEXT As String) 'Thread(ID as any ptr)
       CheckNote()
       If PO > 0 Then PO -= 1
       'print "Octave " & PO
+    Case Asc("N")              'Play Note
+      CheckNote()
+      ReadNumber(NOTE)
+      If NOTE < 1 Or NOTE > 84 Then NOTE = -1
+      NOTE = -1  'TODO: This only supports rests via the "N" command
+      STPLAY = 1
+      Goto _PlayNote_
     Case Asc("P")              'Pause
       CheckNote()
       ReadNumber(STSIZE)
