@@ -8,12 +8,14 @@
 '
 '  * commandstring is a stringexpression that contains music commands:
 '
-' ----- Set Octaves and Play Tones -----
-'  On       set the current octave (n = 0-6)
-'  < or >   decrease or increase the current octave
+' ----- Play Tones -----
 '  Nn       plays note n (n = 0-84, 0 is a rest)
 '  A-Gx     play note A, B, ..., G in current octave, suffixes:
 '           +/# sharp, - flat, . dotted note, n use different length
+'
+' ----- Set Octaves -----
+'  On       set the current octave (n = 0-6)
+'  < or >   decrease or increase the current octave
 '
 ' ----- Set Tone Duration and Tempo -----
 '  Ln   set length of a note
@@ -31,7 +33,7 @@
 '  MF   play music in the foreground
 '  MB   play music in the background
 '
-' ----- MIDI Commands -----
+' ----- Set MIDI Variables -----
 '  In   set instrument (n = 0-127, 16 default)
 '  Vn   set volume (n = 0-127, 127 default)
 
