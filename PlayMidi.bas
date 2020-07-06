@@ -4,23 +4,36 @@
 '
 ' PLAY - a device I/O statement that plays music
 '
-' Syntax
-'   PLAY commandstring
-'     * commandstring is a stringexpression that contains music commands:
-' --------------------------Set Octaves and Play Tones--------------------------
-'  On  Sets current octave (n = 0-6)    |  < or >  Up or down one octave
-'  Nn  Plays note n (n = 0-84, 0 is a   |  A-G  Plays A, B, ..., G in current
-'      rest)                            |      octave (+ = sharp, - = flat)
-' --------------------------Set Tone Duration and Tempo-------------------------
-'  Ln  Sets length of a note (L1 is     |  MS  Each note plays 3/4 of length
-'      whole note, L4 is quarter note,  |  MN  Each note plays 7/8 of length
-'      etc.)  n = 1-64                  |  ML  Each note plays full length
-'  Tn  Sets number of quarter notes per |  Pn  Pause for the duration of
-'      minute (n = 32-255, 120 default  |      n quarternotes (n = 1-64)
-' --------------------------------Set Operation---------------------------------
-'  MF  Plays music in foreground        |  MB  Plays music in background
-' -------------------------------Execute Substrings-----------------------------
-'        X + VARPTR$(string-expression)     Executes another command string
+' Syntax: PLAY commandstring
+'
+'  * commandstring is a stringexpression that contains music commands:
+'
+' ----- Set Octaves and Play Tones -----
+'  On       set the current octave (n = 0-6)
+'  < or >   decrease or increase the current octave
+'  Nn       plays note n (n = 0-84, 0 is a rest)
+'  A-Gx     play note A, B, ..., G in current octave, suffixes:
+'           +/# sharp, - flat, . dotted note, n use different length
+'
+' ----- Set Tone Duration and Tempo -----
+'  Ln   set length of a note
+'       L1 is whole note, L4 is quarter note, etc.
+'       (n = 1-64, 4 default)
+'  MS   staccato articulation, each note plays 3/4 of length
+'  MN   normal articulation,   each note plays 7/8 of length
+'  ML   legato articulation,   each note plays full length
+'  Tn   set the tempo in beats (quarter note) per minute
+'       (n = 32-320, 120 default)
+'  Pn   pause for the specified note length (n = 1-64)
+'       P1 is a whole-note pause, P2 is a half-note pause, etc.
+'
+' ----- Set Operation -----
+'  MF   play music in the foreground
+'  MB   play music in the background
+'
+' ----- MIDI Commands -----
+'  In   set instrument (n = 0-127, 16 default)
+'  Vn   set volume (n = 0-127, 127 default)
 
 #lang "fb"
 
@@ -48,9 +61,9 @@ Const WHOLE_NOTE           = 4 * TIME_DIVISION
 Const TEMPO_1BPM           = 60000000   ' micro-seconds / minute
 Const TEMPO_DEFAULT        = TEMPO_1BPM \ DEFAULT_TEMPO
 Const BUFFER_SIZE          = 768
-Const MIDIEVENT_SIZE       = 3 * sizeof(DWORD)
+Const MIDIEVENT_SIZE       = 3 * SizeOf(DWORD)
 
-Declare Sub MidiCallback(byval hdrvr as HDRVR, byval uMsg as UINT, byval dwUser as DWORD_PTR, byval dw1 as DWORD_PTR, byval dw2 as DWORD_PTR)
+Declare Sub MidiCallback(ByVal hdrvr As HDRVR, ByVal uMsg As UINT, ByVal dwUser As DWORD_PTR, ByVal dw1 As DWORD_PTR, ByVal dw2 As DWORD_PTR)
 
 Type MidiBuffer As _MidiBuffer
 
@@ -73,7 +86,7 @@ Union MidiMessage
         status As UByte
         data1  As UByte
         data2  As UByte
-        Reserved As UByte
+        code   As UByte
     End Type
 End Union
 
@@ -138,17 +151,17 @@ Sub MidiPlayer.Initialize()
         If result <> MMSYSERR_NOERROR Then Error 1
 
         Dim As MIDIPROPTIMEDIV timeDiv
-        timeDiv.cbStruct = sizeof(MIDIPROPTIMEDIV)
+        timeDiv.cbStruct = SizeOf(MIDIPROPTIMEDIV)
         timeDiv.dwTimeDiv = TIME_DIVISION
         result = midiStreamProperty(stream, Cast(LPBYTE, @timeDiv), MIDIPROP_SET Or MIDIPROP_TIMEDIV)
-        if result <> MMSYSERR_NOERROR Then Error 1
+        If result <> MMSYSERR_NOERROR Then Error 1
 
         ' Redundant if TEMPO_DEFAULT = 120 bpm
         Dim As MIDIPROPTEMPO   tempo
-        tempo.cbStruct = sizeof(MIDIPROPTEMPO)
+        tempo.cbStruct = SizeOf(MIDIPROPTEMPO)
         tempo.dwTempo = TEMPO_DEFAULT
         result = midiStreamProperty(stream, Cast(LPBYTE, @tempo), MIDIPROP_SET Or MIDIPROP_TEMPO)
-        if result <> MMSYSERR_NOERROR Then Error 1
+        If result <> MMSYSERR_NOERROR Then Error 1
     End If
     MutexUnlock streamLock
 End Sub
@@ -157,7 +170,7 @@ Sub MidiPlayer.Shutdown()
     MutexLock streamLock
     If stream <> 0 Then
         Dim As MMRESULT result = midiStreamClose(stream)
-        if result <> MMSYSERR_NOERROR Then Error 1
+        If result <> MMSYSERR_NOERROR Then Error 1
         stream = 0
     End If
     MutexUnlock streamLock
@@ -174,20 +187,20 @@ Sub MidiPlayer.PlayBuffer(buffer As MidiBuffer Ptr)
     buffer->player = @This
     If buffer->finishLock <> 0 Then MutexLock buffer->finishLock
 
-    header = new MIDIHDR
+    header = New MIDIHDR
     header->lpData = buffer->buffer
     header->dwBufferLength = buffer->bufferLength
     header->dwBytesRecorded = buffer->bufferRecorded
     header->dwUser = Cast(DWORD_PTR, buffer)
 
-    result = midiOutPrepareHeader(cast(HMIDIOUT, stream), header, sizeof(MIDIHDR))
-    if result <> MMSYSERR_NOERROR Then Error 1
+    result = midiOutPrepareHeader(Cast(HMIDIOUT, stream), header, SizeOf(MIDIHDR))
+    If result <> MMSYSERR_NOERROR Then Error 1
 
-    result = midiStreamOut(stream, header, sizeof(MIDIHDR))
-    if result <> MMSYSERR_NOERROR Then Error 1
+    result = midiStreamOut(stream, header, SizeOf(MIDIHDR))
+    If result <> MMSYSERR_NOERROR Then Error 1
 
     result = midiStreamRestart(stream)
-    if result <> MMSYSERR_NOERROR Then Error 1
+    If result <> MMSYSERR_NOERROR Then Error 1
 End Sub
 
 Constructor _MidiBuffer()
@@ -204,14 +217,14 @@ End Destructor
 Sub _MidiBuffer.AddRest(waitTime As UInteger)
     If waitTime <= 0 Then Exit Sub
     Dim As MidiMessage msg
-    msg.Reserved = MEVT_NOP
+    msg.code = MEVT_NOP
     AddEvent waitTime, msg
 End Sub
 
 Sub _MidiBuffer.AddTempo(tempo As UInteger)
     Dim As MidiMessage msg
     msg.msg = tempo
-    msg.Reserved = MEVT_TEMPO
+    msg.code = MEVT_TEMPO
     AddEvent 0, msg
 End Sub
 
@@ -256,7 +269,7 @@ Destructor PlayStatus()
     MutexDestroy statusLock
 End Destructor
 
-Sub MidiCallback(byval hdrvr as HDRVR, byval uMsg as UINT, byval dwUser as DWORD_PTR, byval dw1 as DWORD_PTR, byval dw2 as DWORD_PTR)
+Sub MidiCallback(ByVal hdrvr As HDRVR, ByVal uMsg As UINT, ByVal dwUser As DWORD_PTR, ByVal dw1 As DWORD_PTR, ByVal dw2 As DWORD_PTR)
     Dim As MIDIHDR Ptr header = Cast(MIDIHDR Ptr, dw1)
 
     Select Case uMsg
@@ -264,7 +277,8 @@ Sub MidiCallback(byval hdrvr as HDRVR, byval uMsg as UINT, byval dwUser as DWORD
     Case MOM_DONE:
         If header = 0 Then Error 1
         Dim As MidiBuffer Ptr buffer = Cast(MidiBuffer Ptr, header->dwUser)
-        midiOutUnprepareHeader(cast(HMIDIOUT, buffer->player->stream), header, sizeof(MIDIHDR))
+        If buffer = 0 Then Error 1
+        midiOutUnprepareHeader(Cast(HMIDIOUT, buffer->player->stream), header, SizeOf(MIDIHDR))
         Delete header
 
         MutexLock buffer->player->dataLock
@@ -283,12 +297,12 @@ Sub MidiCallback(byval hdrvr as HDRVR, byval uMsg as UINT, byval dwUser as DWORD
     End Select
 End Sub
 
-Const ASCII_LT    = ASC("<")
-Const ASCII_GT    = ASC(">")
-Const ASCII_PLUS  = ASC("+")
-Const ASCII_MINUS = ASC("-")
-Const ASCII_SHARP = ASC("#")
-Const ASCII_DOT   = ASC(".")
+Const ASCII_LT    = Asc("<")
+Const ASCII_GT    = Asc(">")
+Const ASCII_PLUS  = Asc("+")
+Const ASCII_MINUS = Asc("-")
+Const ASCII_SHARP = Asc("#")
+Const ASCII_DOT   = Asc(".")
 
 Type StringParser
     Declare Constructor(text As String)
@@ -464,6 +478,3 @@ End Namespace
 Sub Play(commandstring As String)
     QBPlay.Play commandstring
 End Sub
-
-Play "<EDC"
-Sleep
