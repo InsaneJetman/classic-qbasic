@@ -614,7 +614,7 @@ SUB Intro
   Center 12, "of the playing field, its length relative to its strength."
   Center 24, "Press any key to continue"
 
-  PLAY "MBI16T160O1L8CDEDCDL4ECC"
+  PLAY "MBT160O1L8CDEDCDL4ECC"
   SparklePause
   IF Mode = 1 THEN MaxCol = 40
 END SUB

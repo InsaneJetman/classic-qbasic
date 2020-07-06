@@ -270,7 +270,7 @@ SUB Intro
     Center 20, "                       (Down)                 (Down)     "
     Center 24, "Press any key to continue"
 
-    PLAY "MBI16T160O1L8CDEDCDL4ECC"
+    PLAY "MBT160O1L8CDEDCDL4ECC"
     SparklePause
 
 END SUB

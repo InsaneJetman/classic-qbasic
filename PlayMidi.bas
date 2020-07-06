@@ -53,7 +53,7 @@ Const DEFAULT_TEMPO        = 120        ' bpm
 Const SHORTEST_NOTE_LENGTH = 64         ' 64th note
 Const DEFAULT_NOTE_LENGTH  = 4          ' quarter note
 Const MAX_INSTRUMENT       = 127
-Const DEFAULT_INSTRUMENT   = 0          ' piano
+Const DEFAULT_INSTRUMENT   = 16         ' Hammond organ
 Const MAX_VOLUME           = 127
 Const DEFAULT_VOLUME       = MAX_VOLUME
 Const TIME_DIVISION        = 240        ' ticks per beat
@@ -161,6 +161,12 @@ Sub MidiPlayer.Initialize()
         tempo.cbStruct = SizeOf(MIDIPROPTEMPO)
         tempo.dwTempo = TEMPO_DEFAULT
         result = midiStreamProperty(stream, Cast(LPBYTE, @tempo), MIDIPROP_SET Or MIDIPROP_TEMPO)
+        If result <> MMSYSERR_NOERROR Then Error 1
+
+        Dim As MidiMessage msg
+        msg.status = &hC0
+        msg.data1 = DEFAULT_INSTRUMENT
+        result = midiOutShortMsg(Cast(HMIDIOUT, stream), msg.msg)
         If result <> MMSYSERR_NOERROR Then Error 1
     End If
     MutexUnlock streamLock
