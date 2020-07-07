@@ -106,7 +106,6 @@ DIM SHARED GHeight
   GetInputs Name1$, Name2$, NumGames
   GorillaIntro Name1$, Name2$
   PlayGame Name1$, Name2$, NumGames
-  SCREEN 0
 
 END
 
@@ -495,7 +494,6 @@ FUNCTION GetNum# (Row, Col)
           Result$ = LEFT$(Result$, LEN(Result$) - 1)
         END IF
       CASE CHR$(0) + CHR$(107)
-        SCREEN 0
         END
       CASE ELSE
         IF LEN(Kbd$) > 0 THEN
@@ -525,7 +523,7 @@ SUB GorillaIntro (Player1$, Player2$)
   DO WHILE Char$ = ""
     Char$ = INKEY$
   LOOP
-  IF Char$ = CHR$(0) + CHR$(107) THEN SCREEN 0: END
+  IF Char$ = CHR$(0) + CHR$(107) THEN END
 
   IF Mode = 1 THEN
     x = 125
@@ -961,7 +959,7 @@ SUB Rest (t#)
     __SLEEP 1
     DO
       Kbd$ = INKEY$
-      IF Kbd$ = CHR$(0) + CHR$(107) THEN SCREEN 0: END
+      IF Kbd$ = CHR$(0) + CHR$(107) THEN END
     LOOP WHILE Kbd$ <> ""
   LOOP WHILE TIMER < t2#
 END SUB
@@ -1038,7 +1036,7 @@ SUB SparklePause
     NEXT b
     __SLEEP 60
     Kbd$ = INKEY$
-    IF Kbd$ = CHR$(0) + CHR$(107) THEN SCREEN 0: END
+    IF Kbd$ = CHR$(0) + CHR$(107) THEN END
   WEND
 END SUB
 
