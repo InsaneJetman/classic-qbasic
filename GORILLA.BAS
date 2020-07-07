@@ -535,7 +535,7 @@ SUB GorillaIntro (Player1$, Player2$)
     y = 175
   END IF
 
-  SCREEN Mode
+  __SCREEN Mode, , , 4
   SetScreen
 
   IF Mode = 1 THEN Center 5, "Please wait while gorillas are drawn."
@@ -601,7 +601,7 @@ END SUB
 '  Displays game introduction
 SUB Intro
 
-  IF Mode = 1 THEN SCREEN 2 ELSE SCREEN Mode
+  IF Mode = 1 THEN __SCREEN 2, , , 4 ELSE __SCREEN Mode, , , 4
   MaxCol = 80
 
   Center 4, "Q B a s i c    G O R I L L A S"
@@ -814,7 +814,7 @@ SUB PlayGame (Player1$, Player2$, NumGames)
     SLEEP 1
   NEXT i
 
-  IF Mode = 1 THEN SCREEN 2 ELSE SCREEN Mode
+  IF Mode = 1 THEN __SCREEN 2, , , 4 ELSE __SCREEN Mode, , , 4
   WIDTH 80, 25
   IF Mode <> 1 THEN COLOR 7
   MaxCol = 80
