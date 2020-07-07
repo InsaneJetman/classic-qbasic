@@ -26,6 +26,7 @@ DEFINT A-Z
 
 'Sub Declarations
 DECLARE SUB DoSun (Mouth)
+DECLARE SUB ScreenMode (ModeCGA)
 DECLARE SUB SetScreen ()
 DECLARE SUB EndGame ()
 DECLARE SUB Center (Row, Text$)
@@ -533,7 +534,7 @@ SUB GorillaIntro (Player1$, Player2$)
     y = 175
   END IF
 
-  __SCREEN Mode, , , 4
+  ScreenMode 1
   SetScreen
 
   IF Mode = 1 THEN Center 5, "Please wait while gorillas are drawn."
@@ -599,7 +600,7 @@ END SUB
 '  Displays game introduction
 SUB Intro
 
-  IF Mode = 1 THEN __SCREEN 2, , , 4 ELSE __SCREEN Mode, , , 4
+  ScreenMode 2
   MaxCol = 80
 
   Center 4, "Q B a s i c    G O R I L L A S"
@@ -812,7 +813,7 @@ SUB PlayGame (Player1$, Player2$, NumGames)
     SLEEP 1
   NEXT i
 
-  IF Mode = 1 THEN __SCREEN 2, , , 4 ELSE __SCREEN Mode, , , 4
+  ScreenMode 2
   WIDTH 80, 25
   IF Mode <> 1 THEN COLOR 7
   MaxCol = 80
@@ -981,6 +982,24 @@ FUNCTION Scl (n!)
   END IF
 
 END FUNCTION
+
+'ScreenMode:
+'  Change or reset the screen mode
+SUB ScreenMode (ModeCGA)
+    STATIC OldMode
+    IF Mode = 1 THEN NewMode = ModeCGA ELSE NewMode = Mode
+    IF NewMode <> OldMode THEN
+        __SCREEN NewMode, , , 4
+        OldMode = NewMode
+    ELSEIF Mode = 9 THEN
+        PALETTE 0, 0
+        PALETTE 7, 7
+        COLOR 15
+        CLS
+    ELSE
+        CLS
+    END IF
+END SUB
 
 'SetScreen:
 '  Sets the appropriate color statements
