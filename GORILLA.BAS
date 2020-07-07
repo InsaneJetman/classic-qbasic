@@ -252,19 +252,18 @@ END SUB
 '   X#, Y# - location of explosion
 '
 SUB DoExplosion (x#, y#)
-
   PLAY "MBO0L32EFGEFDC"
   Radius = ScrHeight / 50
-  IF Mode = 9 THEN Inc# = .5 ELSE Inc# = .41
-  FOR c# = 0 TO Radius STEP Inc#
-    CIRCLE (x#, y#), c#, ExplosionColor
-  NEXT c#
-  FOR c# = Radius TO 0 STEP (-1 * Inc#)
-    CIRCLE (x#, y#), c#, BACKATTR
-    FOR i = 1 TO 100
-    NEXT i
-    Rest .005
-  NEXT c#
+  FOR i = 0 TO Radius
+    CIRCLE (x#, y#), i, ExplosionColor
+    CIRCLE (x#, y#), i, ExplosionColor, , , 0.6
+    Rest .01
+  NEXT i
+  FOR i = Radius TO 0 STEP -1
+    CIRCLE (x#, y#), i, BACKATTR
+    CIRCLE (x#, y#), i, BACKATTR, , , 0.6
+    Rest .01
+  NEXT i
 END SUB
 
 ' DoShot:
@@ -471,7 +470,7 @@ FUNCTION ExplodeGorilla (x#, y#)
 
   FOR i = 1 TO 16 * SclX#
     IF i < (8 * SclX#) THEN CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + 7 * SclY# + YAdj), (8 * SclX# + 1) - i, BACKATTR, , , -1.57
-    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + YAdj), i, i MOD 2 + 1, , , -1.57
+    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + YAdj), i, FIX(i * .43) MOD 2 + 1, , , -1.57
     Rest .005
   NEXT i
 
