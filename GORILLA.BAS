@@ -428,7 +428,7 @@ END FUNCTION
 '  Player1$, Player2$ - player names
 '  NumGames - number of games to play
 SUB GetInputs (Player1$, Player2$, NumGames)
-  IF Mode <> 1 THEN COLOR 7
+  COLOR 7
   CLS
 
   LOCATE 8, 15
@@ -608,11 +608,11 @@ END SUB
 '  Displays game introduction
 SUB Intro
 
-  ScreenMode 2
+  ScreenMode 8
   MaxCol = 80
 
   Center 4, "Q B a s i c    G O R I L L A S"
-  IF Mode <> 1 THEN COLOR 7
+  COLOR 7
   Center 6, "Copyright (C) Microsoft Corporation 1990"
   Center 8, "Your mission is to hit your opponent with the exploding"
   Center 9, "banana by varying the angle and power of your throw, taking"
@@ -821,9 +821,9 @@ SUB PlayGame (Player1$, Player2$, NumGames)
     SLEEP 1
   NEXT i
 
-  ScreenMode 2
+  ScreenMode 8
   WIDTH 80, 25
-  IF Mode <> 1 THEN COLOR 7
+  COLOR 7
   MaxCol = 80
   CLS
 
@@ -999,13 +999,11 @@ SUB ScreenMode (ModeCGA)
     IF NewMode <> OldMode THEN
         __SCREEN NewMode, , , 4
         OldMode = NewMode
-    ELSEIF Mode = 9 THEN
+    ELSEIF NewMode > 2 THEN
+        COLOR 15, 0
+        CLS
         PALETTE 0, 0
         PALETTE 7, 7
-        COLOR 15
-        CLS
-    ELSE
-        CLS
     END IF
 END SUB
 
@@ -1039,7 +1037,7 @@ END SUB
 '  Creates flashing border for intro and game over screens
 SUB SparklePause
 
-  IF Mode <> 1 THEN COLOR 4, 0
+  COLOR 4, 0
   a$ = "*    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    "
   Rest 0 'Clear keyboard buffer
 
