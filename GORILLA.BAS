@@ -64,7 +64,8 @@ CONST TRUE = -1
 CONST FALSE = NOT TRUE
 CONST HITSELF = 1
 CONST BACKATTR = 0
-CONST OBJECTCOLOR = 1
+CONST OBJECTCOLOR1 = 1
+CONST OBJECTCOLOR2 = 10
 CONST WINDOWCOLOR = 14
 CONST SUNATTR = 3
 CONST SUNHAPPY = FALSE
@@ -94,6 +95,7 @@ DIM SHARED Mode
 DIM SHARED MaxCol
 
 'Screen Color Variables
+DIM SHARED DetailColor
 DIM SHARED ExplosionColor
 DIM SHARED BackColor
 DIM SHARED SunHit
@@ -332,53 +334,53 @@ SUB DrawGorilla (x, y, arms)
   DIM i AS SINGLE   ' Local index must be single precision
 
   'draw head
-  LINE (x - Scl(4), y)-(x + Scl(2.9), y + Scl(6)), OBJECTCOLOR, BF
-  LINE (x - Scl(5), y + Scl(2))-(x + Scl(4), y + Scl(4)), OBJECTCOLOR, BF
+  LINE (x - Scl(4), y)-(x + Scl(2.9), y + Scl(6)), OBJECTCOLOR1, BF
+  LINE (x - Scl(5), y + Scl(2))-(x + Scl(4), y + Scl(4)), OBJECTCOLOR1, BF
 
   'draw eyes/brow
-  LINE (x - Scl(3), y + Scl(2))-(x + Scl(2), y + Scl(2)), 0
+  LINE (x - Scl(3), y + Scl(2))-(x + Scl(2), y + Scl(2)), DetailColor
 
   'draw nose if ega
   IF Mode = 9 THEN
     FOR i = -2 TO -1
-      PSET (x + i, y + 4), 0
-      PSET (x + i + 3, y + 4), 0
+      PSET (x + i, y + 4), DetailColor
+      PSET (x + i + 3, y + 4), DetailColor
     NEXT i
   END IF
 
   'neck
-  LINE (x - Scl(3), y + Scl(7))-(x + Scl(2), y + Scl(7)), OBJECTCOLOR
+  LINE (x - Scl(3), y + Scl(7))-(x + Scl(2), y + Scl(7)), OBJECTCOLOR1
 
   'body
-  LINE (x - Scl(8), y + Scl(8))-(x + Scl(6.9), y + Scl(14)), OBJECTCOLOR, BF
-  LINE (x - Scl(6), y + Scl(15))-(x + Scl(4.9), y + Scl(20)), OBJECTCOLOR, BF
+  LINE (x - Scl(8), y + Scl(8))-(x + Scl(6.9), y + Scl(14)), OBJECTCOLOR1, BF
+  LINE (x - Scl(6), y + Scl(15))-(x + Scl(4.9), y + Scl(20)), OBJECTCOLOR1, BF
 
   'legs
   FOR i = 0 TO 4
-    CIRCLE (x + Scl(i), y + Scl(25)), Scl(10), OBJECTCOLOR, 3 * pi# / 4, 9 * pi# / 8
-    CIRCLE (x + Scl(-6) + Scl(i - .1), y + Scl(25)), Scl(10), OBJECTCOLOR, 15 * pi# / 8, pi# / 4
+    CIRCLE (x + Scl(i), y + Scl(25)), Scl(10), OBJECTCOLOR1, 3 * pi# / 4, 9 * pi# / 8
+    CIRCLE (x + Scl(-6) + Scl(i - .1), y + Scl(25)), Scl(10), OBJECTCOLOR1, 15 * pi# / 8, pi# / 4
   NEXT
 
   'chest
-  CIRCLE (x - Scl(4.9), y + Scl(10)), Scl(4.9), 0, 3 * pi# / 2, 0
-  CIRCLE (x + Scl(4.9), y + Scl(10)), Scl(4.9), 0, pi#, 3 * pi# / 2
+  CIRCLE (x - Scl(4.9), y + Scl(10)), Scl(4.9), DetailColor, 3 * pi# / 2, 0
+  CIRCLE (x + Scl(4.9), y + Scl(10)), Scl(4.9), DetailColor, pi#, 3 * pi# / 2
 
   FOR i = -5 TO -1
     SELECT CASE arms
       CASE 1
         'Right arm up
-        CIRCLE (x + Scl(i - .1), y + Scl(14)), Scl(9), OBJECTCOLOR, 3 * pi# / 4, 5 * pi# / 4
-        CIRCLE (x + Scl(4.9) + Scl(i), y + Scl(4)), Scl(9), OBJECTCOLOR, 7 * pi# / 4, pi# / 4
+        CIRCLE (x + Scl(i - .1), y + Scl(14)), Scl(9), OBJECTCOLOR1, 3 * pi# / 4, 5 * pi# / 4
+        CIRCLE (x + Scl(4.9) + Scl(i), y + Scl(4)), Scl(9), OBJECTCOLOR1, 7 * pi# / 4, pi# / 4
         GET (x - Scl(15), y - Scl(1))-(x + Scl(14), y + Scl(28)), GorR&
       CASE 2
         'Left arm up
-        CIRCLE (x + Scl(i - .1), y + Scl(4)), Scl(9), OBJECTCOLOR, 3 * pi# / 4, 5 * pi# / 4
-        CIRCLE (x + Scl(4.9) + Scl(i), y + Scl(14)), Scl(9), OBJECTCOLOR, 7 * pi# / 4, pi# / 4
+        CIRCLE (x + Scl(i - .1), y + Scl(4)), Scl(9), OBJECTCOLOR1, 3 * pi# / 4, 5 * pi# / 4
+        CIRCLE (x + Scl(4.9) + Scl(i), y + Scl(14)), Scl(9), OBJECTCOLOR1, 7 * pi# / 4, pi# / 4
         GET (x - Scl(15), y - Scl(1))-(x + Scl(14), y + Scl(28)), GorL&
       CASE 3
         'Both arms down
-        CIRCLE (x + Scl(i - .1), y + Scl(14)), Scl(9), OBJECTCOLOR, 3 * pi# / 4, 5 * pi# / 4
-        CIRCLE (x + Scl(4.9) + Scl(i), y + Scl(14)), Scl(9), OBJECTCOLOR, 7 * pi# / 4, pi# / 4
+        CIRCLE (x + Scl(i - .1), y + Scl(14)), Scl(9), OBJECTCOLOR1, 3 * pi# / 4, 5 * pi# / 4
+        CIRCLE (x + Scl(4.9) + Scl(i), y + Scl(14)), Scl(9), OBJECTCOLOR1, 7 * pi# / 4, pi# / 4
         GET (x - Scl(15), y - Scl(1))-(x + Scl(14), y + Scl(28)), GorD&
     END SELECT
   NEXT i
@@ -541,7 +543,10 @@ SUB GorillaIntro (Player1$, Player2$)
 
   VIEW PRINT 9 TO 24
 
-  IF Mode = 9 THEN PALETTE OBJECTCOLOR, BackColor
+  IF Mode = 9 THEN
+    PALETTE OBJECTCOLOR1, BackColor
+    PALETTE OBJECTCOLOR2, BackColor
+  END IF
 
   DrawGorilla x, y, ARMSDOWN
   CLS 2
@@ -551,7 +556,10 @@ SUB GorillaIntro (Player1$, Player2$)
   CLS 2
 
   VIEW PRINT 1 TO 25
-  IF Mode = 9 THEN PALETTE OBJECTCOLOR, 46
+  IF Mode = 9 THEN
+    PALETTE OBJECTCOLOR1, 46
+    PALETTE OBJECTCOLOR2, 0
+  END IF
 
   IF UCASE$(Char$) = "V" THEN
     Center 2, "Q B A S I C   G O R I L L A S"
@@ -882,7 +890,7 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
   IF Velocity < 2 THEN              'Shot too slow - hit self
     x# = StartX
     y# = StartY
-    pointval = OBJECTCOLOR
+    pointval = OBJECTCOLOR1
   END IF
 
   DO WHILE (NOT Impact) AND OnScreen
@@ -942,9 +950,9 @@ FUNCTION PlotShot (StartX, StartY, Angle#, Velocity, PlayerNum)
 
   LOOP
 
-  IF pointval <> OBJECTCOLOR AND Impact THEN
+  IF pointval <> OBJECTCOLOR1 AND pointval <> OBJECTCOLOR2 AND Impact THEN
     CALL DoExplosion(x# + adjust, y# + adjust)
-  ELSEIF pointval = OBJECTCOLOR THEN
+  ELSEIF pointval = OBJECTCOLOR1 OR pointval = OBJECTCOLOR2 THEN
     PlayerHit = ExplodeGorilla(x#)
   END IF
 
@@ -1006,6 +1014,7 @@ END SUB
 SUB SetScreen
 
   IF Mode = 9 THEN
+    DetailColor = OBJECTCOLOR2
     ExplosionColor = 2
     BackColor = 1
     PALETTE 0, 1
@@ -1016,7 +1025,9 @@ SUB SetScreen
     PALETTE 6, 4
     PALETTE 7, 3
     PALETTE 9, 63       'Display Color
+    PALETTE 10, 0
   ELSE
+    DetailColor = 0
     ExplosionColor = 2
     BackColor = 0
     COLOR BackColor, 2
