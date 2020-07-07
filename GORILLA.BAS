@@ -187,19 +187,16 @@ END SUB
 '   X#, Y# - location of explosion
 '
 SUB DoExplosion (x#, y#)
-
   PLAY "MBO0L32EFGEFDC"
   Radius = ScrHeight / 50
-  IF Mode = 9 THEN Inc# = .5 ELSE Inc# = .41
-  FOR c# = 0 TO Radius STEP Inc#
-    CIRCLE (x#, y#), c#, ExplosionColor
-  NEXT c#
-  FOR c# = Radius TO 0 STEP (-1 * Inc#)
-    CIRCLE (x#, y#), c#, BACKATTR
-    FOR i = 1 TO 100
-    NEXT i
-    Rest .005
-  NEXT c#
+  FOR i = 32 TO 32 * Radius
+    CIRCLE (x#, y#), i / 32, ExplosionColor
+    IF i MOD 32 = 0 THEN Rest .01
+  NEXT i
+  FOR i = 32 * Radius TO 32 STEP -1
+    CIRCLE (x#, y#), i / 32, BACKATTR
+    IF i MOD 32 = 0 THEN Rest .01
+  NEXT i
 END SUB
 
 ' DoShot:
@@ -398,21 +395,23 @@ FUNCTION ExplodeGorilla (x#)
   IF x# < ScrWidth / 2 THEN PlayerHit = 1 ELSE PlayerHit = 2
   PLAY "MBO0L16EFGEFDC"
 
-  FOR i = 1 TO 8 * SclX#
-    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + 7 * SclY# + YAdj), i, ExplosionColor, , , .43
-    LINE (GorillaX(PlayerHit) + 7 * SclX#, GorillaY(PlayerHit) + 9 * SclY# - i)-(GorillaX(PlayerHit), GorillaY(PlayerHit) + 9 * SclY# - i), ExplosionColor
-    Rest .005
+  FOR i = 32 TO 32 * 8 * SclX#
+    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + 7 * SclY# + YAdj), i / 32, ExplosionColor, , , .43
+    IF i MOD 32 = 0 THEN
+        LINE (GorillaX(PlayerHit) + 7 * SclX#, GorillaY(PlayerHit) + 9 * SclY# - i / 32)-(GorillaX(PlayerHit), GorillaY(PlayerHit) + 9 * SclY# - i / 32), ExplosionColor
+        Rest .005
+    END IF
   NEXT i
 
-  FOR i = 1 TO 16 * SclX#
-    IF i < (8 * SclX#) THEN CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + 7 * SclY# + YAdj), (8 * SclX# + 1) - i, BACKATTR, , , .43
-    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + YAdj), i, i MOD 2 + 1, , , .43
-    Rest .005
+  FOR i = 32 TO 32 * 16 * SclX#
+    IF i / 32 < (8 * SclX#) THEN CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + 7 * SclY# + YAdj), (8 * SclX# + 1) - i / 32, BACKATTR, , , .43
+    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + YAdj), i / 32, FIX(i * .43 / 32) MOD 2 + 1, , , .43
+    IF i MOD 32 = 0 THEN Rest .005
   NEXT i
 
-  FOR i = 24 * SclX# TO 1 STEP -1
-    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + YAdj), i, BACKATTR, , , .43
-    Rest .01
+  FOR i = 32 * 24 * SclX# TO 32 STEP -1
+    CIRCLE (GorillaX(PlayerHit) + 3.5 * SclX# + XAdj, GorillaY(PlayerHit) + YAdj), i / 32, BACKATTR, , , .43
+    IF i MOD 32 = 0 THEN Rest .01
   NEXT i
 
   ExplodeGorilla = PlayerHit
